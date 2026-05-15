@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { Toaster } from 'sonner';
+import { Toaster } from '@/components/ui/toaster';
 
 const navItems = [
   { label: 'ダッシュボード', icon: LayoutDashboard, href: '/dashboard' },
@@ -53,13 +53,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+                className={`relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
                   active
                     ? 'bg-blue-50 text-blue-900 font-medium'
                     : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                <Icon size={18} />
+                {active && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-blue-900 rounded-full" />
+                )}
+                <Icon className="w-4 h-4 shrink-0" />
                 {label}
               </Link>
             );
@@ -69,19 +72,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Separator className="mx-3 my-2" style={{ width: 'calc(100% - 24px)' }} />
 
         {/* Settings */}
-        <div className="px-3 pb-4">
+        <div className="px-3 pb-1">
           <Link
             href="/settings"
-            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+            className={`relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
               pathname === '/settings'
                 ? 'bg-blue-50 text-blue-900 font-medium'
                 : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
-            <Settings size={18} />
+            {pathname === '/settings' && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-blue-900 rounded-full" />
+            )}
+            <Settings className="w-4 h-4 shrink-0" />
             ストア設定
           </Link>
         </div>
+
+        {/* Powered by AI */}
+        <p className="px-6 pb-4 text-xs text-slate-400">Powered by AI</p>
       </aside>
 
       {/* Main */}
@@ -107,7 +116,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-      <Toaster position="bottom-right" richColors />
+      <Toaster />
     </div>
   );
 }

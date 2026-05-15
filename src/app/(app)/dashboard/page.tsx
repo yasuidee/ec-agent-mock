@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import {
   RefreshCw,
   TrendingUp,
@@ -170,6 +170,8 @@ function KpiCard({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const { toast } = useToast();
+
   const initialStates = Object.fromEntries(
     briefActions.map((a) => [a.id, a.status as 'pending' | 'approved' | 'rejected'])
   );
@@ -177,8 +179,12 @@ export default function DashboardPage() {
     useState<Record<string, 'pending' | 'approved' | 'rejected'>>(initialStates);
 
   const approve = (id: string) => {
+    const action = briefActions.find((a) => a.id === id);
     setActionStates((s) => ({ ...s, [id]: 'approved' }));
-    toast.success('アクションを実行しました');
+    toast({
+      title: 'アクションを実行しました',
+      description: action?.title,
+    });
   };
   const reject = (id: string) =>
     setActionStates((s) => ({ ...s, [id]: 'rejected' }));
@@ -187,7 +193,7 @@ export default function DashboardPage() {
   const totalSessions = trafficSources.reduce((s, t) => s + t.sessions, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-300">
       {/* ── 1. Page Header ─────────────────────────────────────── */}
       <div className="flex items-start justify-between">
         <div>
@@ -205,7 +211,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── 2. Brief Actions ───────────────────────────────────── */}
-      <div className="bg-white border rounded-xl p-6">
+      <div className="bg-white border border-amber-200 rounded-xl p-6">
         <div className="flex items-center justify-between mb-1">
           <h2 className="font-semibold text-lg text-slate-900">🟡 今朝のブリーフ</h2>
           {pendingCount > 0 ? (

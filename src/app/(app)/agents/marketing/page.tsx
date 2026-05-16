@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TrendingUp, Users, Wallet, Copy, Check, Sparkles } from 'lucide-react';
 import { AgentBriefCard } from '@/components/AgentBriefCard';
+import { PageSkeleton } from '@/components/PageSkeleton';
 import {
   BarChart,
   Bar,
@@ -96,6 +97,10 @@ const MOCK_POST: Record<Platform, (product: string) => string> = {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MarketingAgentPage() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReady(true), 650); return () => clearTimeout(t); }, []);
+  if (!ready) return <PageSkeleton />;
+
   const [budgetExecuted, setBudgetExecuted] = useState(false);
 
   const [selectedProduct, setSelectedProduct] = useState(products[0]);

@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -14,9 +13,11 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { kpiSummary } from '@/lib/mock-data';
 import { AgentBriefCard } from '@/components/AgentBriefCard';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 // ─── Static data ─────────────────────────────────────────────────────────────
 
@@ -57,6 +58,10 @@ type Period = '今週' | '今月' | '過去90日';
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AnalyticsAgentPage() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReady(true), 650); return () => clearTimeout(t); }, []);
+  if (!ready) return <PageSkeleton />;
+
   const [period, setPeriod] = useState<Period>('今月');
 
   const totalSessions = segments.reduce((s, sg) => s + sg.value, 0);

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle2, Sparkles, Clock } from 'lucide-react';
 import { AgentBriefCard } from '@/components/AgentBriefCard';
+import { PageSkeleton } from '@/components/PageSkeleton';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -64,6 +65,10 @@ const MOCK_PREVIEW = {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function BuildAgentPage() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReady(true), 650); return () => clearTimeout(t); }, []);
+  if (!ready) return <PageSkeleton />;
+
   const [done, setDone] = useState<Record<string, boolean>>({});
 
   const [form, setForm] = useState({ name: '', cost: '', feature: '', lang: '日本語' });

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertTriangle, Plus, Trash2, FileText } from 'lucide-react';
 import { AgentBriefCard } from '@/components/AgentBriefCard';
+import { PageSkeleton } from '@/components/PageSkeleton';
 import {
   LineChart,
   Line,
@@ -79,6 +80,10 @@ const stockBg = (days: number) => {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function InventoryAgentPage() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReady(true), 650); return () => clearTimeout(t); }, []);
+  if (!ready) return <PageSkeleton />;
+
   const { toast } = useToast();
 
   // Alert order button

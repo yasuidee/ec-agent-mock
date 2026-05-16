@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -10,7 +10,9 @@ import {
   MousePointerClick,
   Zap,
   MessageSquare,
+  RotateCcw,
 } from 'lucide-react';
+import { PageSkeleton } from '@/components/PageSkeleton';
 import {
   AreaChart,
   Area,
@@ -180,6 +182,12 @@ function KpiCard({
 
 export default function DashboardPage() {
   const { toast } = useToast();
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setReady(true), 700);
+    return () => clearTimeout(t);
+  }, []);
 
   const initialStates = Object.fromEntries(
     briefActions.map((a) => [a.id, a.status as 'pending' | 'approved' | 'rejected'])
@@ -198,8 +206,15 @@ export default function DashboardPage() {
   const reject = (id: string) =>
     setActionStates((s) => ({ ...s, [id]: 'rejected' }));
 
+  const handleReset = () => {
+    setActionStates(initialStates);
+    toast({ title: 'デモをリセットしました', description: 'すべてのアクションをリセットしました' });
+  };
+
   const pendingCount = Object.values(actionStates).filter((v) => v === 'pending').length;
   const totalSessions = trafficSources.reduce((s, t) => s + t.sessions, 0);
+
+  if (!ready) return <PageSkeleton />;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -212,6 +227,13 @@ export default function DashboardPage() {
           <p className="text-sm text-slate-500 mt-0.5">2026年5月15日 金曜日</p>
         </div>
         <div className="flex items-center gap-2 text-sm text-slate-400">
+          <button
+            onClick={handleReset}
+            className="flex items-center gap-1.5 text-xs text-slate-400 border border-slate-200 px-2.5 py-1 rounded-md hover:bg-slate-50 hover:text-slate-600 transition-colors"
+          >
+            <RotateCcw size={11} />
+            デモをリセット
+          </button>
           <span>最終更新: 数分前</span>
           <button className="p-1.5 rounded-md hover:bg-slate-100 transition-colors">
             <RefreshCw size={15} />

@@ -1,45 +1,36 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { NextRequest } from 'next/server';
+import Anthropic from '@anthropic-ai/sdk'
+import { NextRequest } from 'next/server'
 
-const client = new Anthropic();
-
-const SYSTEM_PROMPT = `あなたはEC Agentです。日本の中小ECオーナーの専属AIアシスタントです。
-ストアデータ: 月商500万円、主力商品はヒノキカッティングボード・有田焼マグカップ・南部鉄器急須。
-今日の売上¥187,400、ROAS3.8倍、在庫切れリスク:有田焼マグカップ(残12個)。
-常に具体的な数字を使い、3つ以内のアクションを提案してください。日本語で回答。`;
+const client = new Anthropic()
 
 export async function POST(req: NextRequest) {
-  const { messages } = await req.json() as {
-    messages: { role: 'user' | 'assistant'; content: string }[];
-  };
+  const { messages } = await req.json()
 
-  const anthropicStream = await client.messages.create({
+  const stream = await client.messages.stream({
     model: 'claude-sonnet-4-5',
-    max_tokens: 1000,
-    system: SYSTEM_PROMPT,
+    max_tokens: 1024,
+    system: `あなたはEC Agentです。日本の中小ECオーナーの専属AIアシスタントです。
+ストアデータ: 月商500万円、主力商品はヒノキカッティングボード・有田焼マグカップ・南部鉄器急須。
+今日の売上¥187,400、ROAS3.8倍、在庫切れリスク:有田焼マグカップ(残12個)。
+常に具体的な数字を使い、3つ以内のアクションを提案してください。日本語で回答。`,
     messages,
-    stream: true,
-  });
+  })
 
-  const encoder = new TextEncoder();
-  const readableStream = new ReadableStream({
+  const readable = new ReadableStream({
     async start(controller) {
-      for await (const event of anthropicStream) {
+      for await (const chunk of stream) {
         if (
-          event.type === 'content_block_delta' &&
-          event.delta.type === 'text_delta'
+          chunk.type === 'content_block_delta' &&
+          chunk.delta.type === 'text_delta'
         ) {
-          controller.enqueue(encoder.encode(event.delta.text));
+          controller.enqueue(new TextEncoder().encode(chunk.delta.text))
         }
       }
-      controller.close();
+      controller.close()
     },
-  });
+  })
 
-  return new Response(readableStream, {
-    headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'X-Content-Type-Options': 'nosniff',
-    },
-  });
+  return new Response(readable, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  })
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Send, Bot } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
@@ -31,38 +32,67 @@ const QUICK_QUESTIONS = [
   '広告予算の最適化を提案して',
 ];
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Chat inner (needs useSearchParams → wrapped in Suspense) ─────────────────
 
-export default function ChatPage() {
+function ChatInner() {
+  const searchParams = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const autoSentRef = useRef(false);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Auto-send query from dashboard navigation
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q && !autoSentRef.current) {
+      autoSentRef.current = true;
+      sendMessage(q);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return;
     const userMsg: Message = { role: 'user', content: text.trim() };
 
-    setMessages((prev) => [...prev, userMsg]);
+    // Append user message + empty assistant placeholder for streaming
+    setMessages((prev) => [...prev, userMsg, { role: 'assistant', content: '' }]);
     setInput('');
     setLoading(true);
 
     try {
-      const history = [...messages, userMsg].filter((m) => m !== INITIAL_MESSAGE);
+      // Build history: real messages (no initial greeting) + new user msg, capped at last 6 (3 exchanges)
+      const realMessages = [...messages.filter((m) => m !== INITIAL_MESSAGE), userMsg];
+      const historyToSend = realMessages.slice(-6);
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: historyToSend }),
       });
-      const data: Message = await res.json();
-      setMessages((prev) => [...prev, data]);
+
+      if (!res.body) throw new Error('no stream body');
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          return [...prev.slice(0, -1), { ...last, content: last.content + chunk }];
+        });
+      }
     } catch {
       setMessages((prev) => [
-        ...prev,
+        ...prev.slice(0, -1),
         { role: 'assistant', content: '申し訳ありません。エラーが発生しました。もう一度お試しください。' },
       ]);
     } finally {
@@ -87,7 +117,8 @@ export default function ChatPage() {
             <li key={q}>
               <button
                 onClick={() => sendMessage(q)}
-                className="w-full text-left border-b py-3 px-4 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                disabled={loading}
+                className="w-full text-left border-b py-3 px-4 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
               >
                 {q}
               </button>
@@ -118,16 +149,24 @@ export default function ChatPage() {
                 }`}
               >
                 {msg.content}
+                {/* Blinking cursor while streaming */}
+                {msg.role === 'assistant' &&
+                  loading &&
+                  i === messages.length - 1 &&
+                  msg.content.length > 0 && (
+                    <span className="inline-block w-0.5 h-3.5 bg-slate-400 ml-0.5 animate-pulse align-middle" />
+                  )}
               </div>
             </div>
           ))}
 
-          {loading && (
+          {/* Typing indicator (before streaming starts) */}
+          {loading && messages[messages.length - 1]?.content === '' && (
             <div className="flex items-end gap-2 justify-start">
               <div className="w-8 h-8 rounded-full bg-blue-900 flex items-center justify-center shrink-0 mb-0.5">
                 <Bot size={16} className="text-white" />
               </div>
-              <div className="bg-white border rounded-lg px-4 py-2">
+              <div className="bg-white border rounded-lg px-4 py-3">
                 <span className="flex gap-1">
                   {[0, 1, 2].map((n) => (
                     <span
@@ -146,7 +185,6 @@ export default function ChatPage() {
 
         {/* Input area */}
         <div className="border-t p-4 bg-white">
-          {/* Quick questions */}
           <div className="flex gap-2 mb-3 flex-wrap">
             {QUICK_QUESTIONS.map((q) => (
               <button
@@ -160,7 +198,6 @@ export default function ChatPage() {
             ))}
           </div>
 
-          {/* Text input */}
           <form onSubmit={handleSubmit} className="flex gap-2">
             <Input
               value={input}
@@ -180,5 +217,15 @@ export default function ChatPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── Page (Suspense wrapper required for useSearchParams) ─────────────────────
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="h-full -m-8 bg-slate-50" />}>
+      <ChatInner />
+    </Suspense>
   );
 }

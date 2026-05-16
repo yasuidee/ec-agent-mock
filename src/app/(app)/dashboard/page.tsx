@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import {
   RefreshCw,
@@ -8,6 +9,7 @@ import {
   ShoppingCart,
   MousePointerClick,
   Zap,
+  MessageSquare,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -123,10 +125,10 @@ function ActionCard({
       </div>
 
       {actionState === 'pending' && (
-        <div className="mt-3">
+        <div className="mt-3 flex flex-col gap-1">
           <button
             onClick={onApprove}
-            className="w-full mb-1 bg-blue-900 text-white text-xs px-3 py-1.5 rounded-md hover:bg-blue-800 transition-colors"
+            className="w-full bg-blue-900 text-white text-xs px-3 py-1.5 rounded-md hover:bg-blue-800 transition-colors"
           >
             承認して実行
           </button>
@@ -136,6 +138,13 @@ function ActionCard({
           >
             却下
           </button>
+          <Link
+            href={`/chat?q=${encodeURIComponent(`「${action.title}」について詳しく教えてください。${action.reasoning}`)}`}
+            className="w-full flex items-center justify-center gap-1.5 border border-blue-200 text-blue-700 text-xs px-3 py-1.5 rounded-md hover:bg-blue-50 transition-colors"
+          >
+            <MessageSquare size={11} />
+            AIに相談する
+          </Link>
         </div>
       )}
     </div>

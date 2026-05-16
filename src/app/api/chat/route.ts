@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
 const client = new Anthropic();
 
@@ -13,15 +13,33 @@ export async function POST(req: NextRequest) {
     messages: { role: 'user' | 'assistant'; content: string }[];
   };
 
-  const response = await client.messages.create({
+  const anthropicStream = await client.messages.create({
     model: 'claude-sonnet-4-5',
     max_tokens: 1000,
     system: SYSTEM_PROMPT,
     messages,
+    stream: true,
   });
 
-  const text =
-    response.content[0].type === 'text' ? response.content[0].text : '';
+  const encoder = new TextEncoder();
+  const readableStream = new ReadableStream({
+    async start(controller) {
+      for await (const event of anthropicStream) {
+        if (
+          event.type === 'content_block_delta' &&
+          event.delta.type === 'text_delta'
+        ) {
+          controller.enqueue(encoder.encode(event.delta.text));
+        }
+      }
+      controller.close();
+    },
+  });
 
-  return NextResponse.json({ role: 'assistant', content: text });
+  return new Response(readableStream, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
 }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { TrendingUp, Users, Wallet, Copy, Check, Sparkles } from 'lucide-react';
+import { AgentBriefCard } from '@/components/AgentBriefCard';
 import {
   BarChart,
   Bar,
@@ -129,6 +130,8 @@ export default function MarketingAgentPage() {
           広告配信・SNS投稿・メルマガをAIが最適化します
         </p>
       </div>
+
+      <AgentBriefCard category="marketing" />
 
       {/* ── 2. KPI Cards ──────────────────────────────────── */}
       <div className="grid grid-cols-3 gap-4">

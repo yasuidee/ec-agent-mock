@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { AlertTriangle, Plus, Trash2, FileText } from 'lucide-react';
+import { AgentBriefCard } from '@/components/AgentBriefCard';
 import {
   LineChart,
   Line,
@@ -120,6 +121,8 @@ export default function InventoryAgentPage() {
           需要予測・発注タイミング・滞留在庫をAIが管理します
         </p>
       </div>
+
+      <AgentBriefCard category="inventory" />
 
       {/* ── 2. Urgent alert ───────────────────────────────── */}
       <div className="bg-red-50 border border-red-200 rounded-xl p-4">

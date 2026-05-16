@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { kpiSummary } from '@/lib/mock-data';
+import { AgentBriefCard } from '@/components/AgentBriefCard';
 
 // ─── Static data ─────────────────────────────────────────────────────────────
 
@@ -69,6 +70,8 @@ export default function AnalyticsAgentPage() {
           アクセス分析・顧客行動・経営PLをAIが可視化します
         </p>
       </div>
+
+      <AgentBriefCard category="analytics" />
 
       {/* ── 2. Period tabs ────────────────────────────────── */}
       <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>

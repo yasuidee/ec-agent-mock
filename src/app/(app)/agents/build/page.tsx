@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { CheckCircle2, Sparkles, Clock } from 'lucide-react';
+import { AgentBriefCard } from '@/components/AgentBriefCard';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -91,6 +92,8 @@ export default function BuildAgentPage() {
           商品ページ生成・SEO最適化・多言語対応をAIが代行します
         </p>
       </div>
+
+      <AgentBriefCard category="build" />
 
       {/* ── 2. Today's suggestions ────────────────────────────── */}
       <div className="bg-white border rounded-xl p-6">

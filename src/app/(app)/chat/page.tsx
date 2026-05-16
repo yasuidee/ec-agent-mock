@@ -49,10 +49,10 @@ function ChatInner() {
 
   // Auto-send query from dashboard navigation
   useEffect(() => {
-    const q = searchParams.get('q');
-    if (q && !autoSentRef.current) {
+    const action = searchParams.get('action');
+    if (action && !autoSentRef.current) {
       autoSentRef.current = true;
-      sendMessage(q);
+      sendMessage(`「${action}」について詳しく教えてください`);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

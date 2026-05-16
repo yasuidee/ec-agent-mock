@@ -141,7 +141,7 @@ function ActionCard({
             却下
           </button>
           <Link
-            href={`/chat?q=${encodeURIComponent(`「${action.title}」について詳しく教えてください。${action.reasoning}`)}`}
+            href={`/chat?action=${encodeURIComponent(action.title)}`}
             className="w-full flex items-center justify-center gap-1.5 border border-blue-200 text-blue-700 text-xs px-3 py-1.5 rounded-md hover:bg-blue-50 transition-colors"
           >
             <MessageSquare size={11} />

@@ -67,7 +67,7 @@ const MOCK_PREVIEW = {
 
 export default function BuildAgentPage() {
   const [ready, setReady] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setReady(true), 650); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => setReady(true), 1000); return () => clearTimeout(t); }, []);
 
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState({ name: '', cost: '', feature: '', lang: '日本語' });

@@ -60,7 +60,7 @@ type Period = '今週' | '今月' | '過去90日';
 
 export default function AnalyticsAgentPage() {
   const [ready, setReady] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setReady(true), 650); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => setReady(true), 1000); return () => clearTimeout(t); }, []);
 
   const [period, setPeriod] = useState<Period>('今月');
 

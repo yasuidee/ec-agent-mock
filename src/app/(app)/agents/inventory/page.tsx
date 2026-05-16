@@ -82,7 +82,7 @@ const stockBg = (days: number) => {
 
 export default function InventoryAgentPage() {
   const [ready, setReady] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setReady(true), 650); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => setReady(true), 1000); return () => clearTimeout(t); }, []);
 
   const { toast } = useToast();
 

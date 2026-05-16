@@ -12,7 +12,7 @@ import {
   MessageSquare,
   RotateCcw,
 } from 'lucide-react';
-import { PageSkeleton } from '@/components/PageSkeleton';
+import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import {
   AreaChart,
   Area,
@@ -185,7 +185,7 @@ export default function DashboardPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setReady(true), 700);
+    const t = setTimeout(() => setReady(true), 1000);
     return () => clearTimeout(t);
   }, []);
 
@@ -214,7 +214,7 @@ export default function DashboardPage() {
   const pendingCount = Object.values(actionStates).filter((v) => v === 'pending').length;
   const totalSessions = trafficSources.reduce((s, t) => s + t.sessions, 0);
 
-  if (!ready) return <PageSkeleton />;
+  if (!ready) return <DashboardSkeleton />;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">

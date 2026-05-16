@@ -40,6 +40,8 @@ export type Product = {
   revenue: number;
   marginRate: number; // %
   stockDays: number;
+  price: number;  // 販売価格
+  cost: number;   // 商品原価
 };
 
 export type TrafficSource = {
@@ -160,6 +162,8 @@ export const topProducts: Product[] = [
     revenue: 588_000,
     marginRate: 48,
     stockDays: 62,
+    price: 8_800,
+    cost: 2_800,
   },
   {
     id: "prod-002",
@@ -169,6 +173,8 @@ export const topProducts: Product[] = [
     revenue: 196_000,
     marginRate: 39,
     stockDays: 17,
+    price: 4_400,
+    cost: 1_200,
   },
   {
     id: "prod-003",
@@ -178,6 +184,8 @@ export const topProducts: Product[] = [
     revenue: 175_000,
     marginRate: 52,
     stockDays: 44,
+    price: 12_800,
+    cost: 4_200,
   },
   {
     id: "prod-004",
@@ -187,6 +195,8 @@ export const topProducts: Product[] = [
     revenue: 108_000,
     marginRate: 55,
     stockDays: 91,
+    price: 1_980,
+    cost: 480,
   },
   {
     id: "prod-005",
@@ -196,6 +206,8 @@ export const topProducts: Product[] = [
     revenue: 99_000,
     marginRate: 43,
     stockDays: 38,
+    price: 6_600,
+    cost: 1_800,
   },
 ];
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { AlertTriangle, Plus, Trash2, FileText } from 'lucide-react';
 import { AgentBriefCard } from '@/components/AgentBriefCard';
 import { PageSkeleton } from '@/components/PageSkeleton';
@@ -120,11 +121,16 @@ export default function InventoryAgentPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* ── 1. Header ─────────────────────────────────────── */}
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-900">在庫AI</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          需要予測・発注タイミング・滞留在庫をAIが管理します
-        </p>
+      <div className="flex items-start justify-between pb-4 border-b">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">在庫AI</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            需要予測・発注タイミング・滞留在庫をAIが管理します
+          </p>
+        </div>
+        <Link href="/dashboard" className="text-sm text-blue-900 hover:text-blue-700 transition-colors mt-1 shrink-0">
+          ← ダッシュボードに戻る
+        </Link>
       </div>
 
       <AgentBriefCard category="inventory" />

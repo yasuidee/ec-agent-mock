@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import {
   BarChart,
   Bar,
@@ -69,11 +70,16 @@ export default function AnalyticsAgentPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* ── 1. Header ─────────────────────────────────────── */}
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-900">分析AI</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          アクセス分析・顧客行動・経営PLをAIが可視化します
-        </p>
+      <div className="flex items-start justify-between pb-4 border-b">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">分析AI</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            アクセス分析・顧客行動・経営PLをAIが可視化します
+          </p>
+        </div>
+        <Link href="/dashboard" className="text-sm text-blue-900 hover:text-blue-700 transition-colors mt-1 shrink-0">
+          ← ダッシュボードに戻る
+        </Link>
       </div>
 
       <AgentBriefCard category="analytics" />

@@ -100,15 +100,15 @@ const MOCK_POST: Record<Platform, (product: string) => string> = {
 export default function MarketingAgentPage() {
   const [ready, setReady] = useState(false);
   useEffect(() => { const t = setTimeout(() => setReady(true), 650); return () => clearTimeout(t); }, []);
-  if (!ready) return <PageSkeleton />;
 
   const [budgetExecuted, setBudgetExecuted] = useState(false);
-
   const [selectedProduct, setSelectedProduct] = useState(products[0]);
   const [platform, setPlatform] = useState<Platform>('Instagram');
   const [post, setPost] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  if (!ready) return <PageSkeleton />;
 
   const handleGenerate = () => {
     setGenerating(true);

@@ -83,7 +83,6 @@ const stockBg = (days: number) => {
 export default function InventoryAgentPage() {
   const [ready, setReady] = useState(false);
   useEffect(() => { const t = setTimeout(() => setReady(true), 650); return () => clearTimeout(t); }, []);
-  if (!ready) return <PageSkeleton />;
 
   const { toast } = useToast();
 
@@ -97,6 +96,8 @@ export default function InventoryAgentPage() {
   const [supplier, setSupplier] = useState('');
   const [lines, setLines] = useState([{ product: '', qty: '' }]);
   const [poDone, setPoDone] = useState(false);
+
+  if (!ready) return <PageSkeleton />;
 
   const handleAlertOrder = () => {
     setAlertOrdered(true);

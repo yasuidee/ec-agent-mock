@@ -61,11 +61,12 @@ type Period = '今週' | '今月' | '過去90日';
 export default function AnalyticsAgentPage() {
   const [ready, setReady] = useState(false);
   useEffect(() => { const t = setTimeout(() => setReady(true), 650); return () => clearTimeout(t); }, []);
-  if (!ready) return <PageSkeleton />;
 
   const [period, setPeriod] = useState<Period>('今月');
 
   const totalSessions = segments.reduce((s, sg) => s + sg.value, 0);
+
+  if (!ready) return <PageSkeleton />;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">

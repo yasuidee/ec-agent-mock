@@ -68,13 +68,13 @@ const MOCK_PREVIEW = {
 export default function BuildAgentPage() {
   const [ready, setReady] = useState(false);
   useEffect(() => { const t = setTimeout(() => setReady(true), 650); return () => clearTimeout(t); }, []);
-  if (!ready) return <PageSkeleton />;
 
   const [done, setDone] = useState<Record<string, boolean>>({});
-
   const [form, setForm] = useState({ name: '', cost: '', feature: '', lang: '日本語' });
   const [preview, setPreview] = useState<null | { title: string; description: string; keywords: string[] }>(null);
   const [generating, setGenerating] = useState(false);
+
+  if (!ready) return <PageSkeleton />;
 
   const handleGenerate = () => {
     if (!form.name) return;

@@ -11,7 +11,12 @@ import {
   Zap,
   MessageSquare,
   RotateCcw,
+  Sparkles,
+  Megaphone,
+  Package,
+  BarChart3,
 } from 'lucide-react';
+import { AgentBadge } from '@/components/dashboard/AgentBadge';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import {
   AreaChart,
@@ -75,16 +80,6 @@ const delta = (v: number) =>
     <span className="text-red-500">↓ {v.toFixed(1)}%</span>
   );
 
-const categoryMeta: Record<
-  BriefAction['category'],
-  { label: string; className: string }
-> = {
-  marketing: { label: 'マーケ',  className: 'bg-blue-100 text-blue-800' },
-  inventory:  { label: '在庫',   className: 'bg-purple-100 text-purple-800' },
-  build:      { label: 'ビルド', className: 'bg-green-100 text-green-800' },
-  analytics:  { label: '分析',   className: 'bg-orange-100 text-orange-800' },
-};
-
 const urgencyDot: Record<BriefAction['urgency'], string> = {
   high:   'bg-red-500',
   medium: 'bg-yellow-400',
@@ -112,7 +107,6 @@ function ActionCard({
   onApprove: () => void;
   onReject: () => void;
 }) {
-  const meta = categoryMeta[action.category];
   const isApproved = actionState === 'approved';
   const isRejected = actionState === 'rejected';
 
@@ -127,9 +121,7 @@ function ActionCard({
       }`}
     >
       <div className="flex items-center justify-between">
-        <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${meta.className}`}>
-          {meta.label}
-        </span>
+        <AgentBadge agent={action.category} clickable={true} />
         <div className="flex items-center gap-1.5">
           {isApproved && (
             <span className="text-xs font-medium text-teal-700 bg-teal-100 px-2 py-0.5 rounded-full">
@@ -478,6 +470,53 @@ export default function DashboardPage() {
               </li>
             ))}
           </ul>
+        </div>
+      </div>
+
+      {/* ── 6. Quick Access ────────────────────────────────────── */}
+      <div className="bg-white border rounded-xl p-6">
+        <h2 className="font-semibold text-slate-900 mb-4">🔗 各エージェントへのクイックアクセス</h2>
+        <div className="grid grid-cols-4 gap-4">
+          <a
+            href="/agents/build"
+            className="border rounded-xl p-4 hover:border-blue-900 hover:bg-blue-50 transition-colors cursor-pointer block"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles size={18} className="text-green-600" />
+              <span className="text-sm font-medium text-slate-800">構築AI</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">商品ページ生成・価格分析</p>
+          </a>
+          <a
+            href="/agents/marketing"
+            className="border rounded-xl p-4 hover:border-blue-900 hover:bg-blue-50 transition-colors cursor-pointer block"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Megaphone size={18} className="text-blue-600" />
+              <span className="text-sm font-medium text-slate-800">集客AI</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">広告判断・SNS投稿生成</p>
+          </a>
+          <a
+            href="/agents/inventory"
+            className="border rounded-xl p-4 hover:border-blue-900 hover:bg-blue-50 transition-colors cursor-pointer block"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Package size={18} className="text-purple-600" />
+              <span className="text-sm font-medium text-slate-800">在庫AI</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">在庫切れ予報・発注最適化</p>
+          </a>
+          <a
+            href="/agents/analytics"
+            className="border rounded-xl p-4 hover:border-blue-900 hover:bg-blue-50 transition-colors cursor-pointer block"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <BarChart3 size={18} className="text-orange-600" />
+              <span className="text-sm font-medium text-slate-800">分析AI</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">売上分析・目標達成プラン</p>
+          </a>
         </div>
       </div>
     </div>

@@ -42,6 +42,14 @@ export type Product = {
   stockDays: number;
   price: number;  // 販売価格
   cost: number;   // 商品原価
+  // 在庫管理拡張フィールド
+  currentStock?: number;       // 現在在庫数
+  weeklyVelocity?: number;     // 週間販売数
+  leadTimeDays?: number;       // 発注リードタイム（日）
+  safetyStockDays?: number;    // 安全在庫日数
+  unitCost?: number;           // 仕入単価
+  lastOrderDate?: string;      // 最終発注日 YYYY-MM-DD
+  turnoverDays?: number;       // 在庫回転日数
 };
 
 export type TrafficSource = {
@@ -164,6 +172,13 @@ export const topProducts: Product[] = [
     stockDays: 62,
     price: 8_800,
     cost: 2_800,
+    currentStock: 85,
+    weeklyVelocity: 21,
+    leadTimeDays: 14,
+    safetyStockDays: 21,
+    unitCost: 2_800,
+    lastOrderDate: "2026-04-28",
+    turnoverDays: 28,
   },
   {
     id: "prod-002",
@@ -175,6 +190,13 @@ export const topProducts: Product[] = [
     stockDays: 17,
     price: 4_400,
     cost: 1_200,
+    currentStock: 12,
+    weeklyVelocity: 7,
+    leadTimeDays: 21,
+    safetyStockDays: 14,
+    unitCost: 1_200,
+    lastOrderDate: "2026-03-15",
+    turnoverDays: 12,
   },
   {
     id: "prod-003",
@@ -186,6 +208,13 @@ export const topProducts: Product[] = [
     stockDays: 44,
     price: 12_800,
     cost: 4_200,
+    currentStock: 34,
+    weeklyVelocity: 5,
+    leadTimeDays: 30,
+    safetyStockDays: 21,
+    unitCost: 4_200,
+    lastOrderDate: "2026-04-10",
+    turnoverDays: 48,
   },
   {
     id: "prod-004",
@@ -197,6 +226,13 @@ export const topProducts: Product[] = [
     stockDays: 91,
     price: 1_980,
     cost: 480,
+    currentStock: 156,
+    weeklyVelocity: 11,
+    leadTimeDays: 7,
+    safetyStockDays: 14,
+    unitCost: 480,
+    lastOrderDate: "2026-05-01",
+    turnoverDays: 98,
   },
   {
     id: "prod-005",
@@ -208,6 +244,13 @@ export const topProducts: Product[] = [
     stockDays: 38,
     price: 6_600,
     cost: 1_800,
+    currentStock: 8,
+    weeklyVelocity: 3,
+    leadTimeDays: 45,
+    safetyStockDays: 30,
+    unitCost: 1_800,
+    lastOrderDate: "2026-02-20",
+    turnoverDays: 18,
   },
 ];
 

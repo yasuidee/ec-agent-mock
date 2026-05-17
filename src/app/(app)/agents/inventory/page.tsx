@@ -1,343 +1,868 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { AlertTriangle, Plus, Trash2, FileText } from 'lucide-react';
-import { AgentBriefCard } from '@/components/AgentBriefCard';
-import { PageSkeleton } from '@/components/PageSkeleton';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { topProducts } from '@/lib/mock-data';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { topProducts, type Product } from '@/lib/mock-data';
 
-// ─── Derived inventory data ───────────────────────────────────────────────────
+// ============================================================
+// 型定義
+// ============================================================
+type UrgencyLevel = 'critical' | 'urgent' | 'warning' | 'normal';
+type SlowMoveLevel = 'danger' | 'warning' | 'normal';
 
-interface InventoryRow extends Product {
+interface StockForecast {
+  id: string;
+  name: string;
+  sku: string;
   currentStock: number;
-  orderQty: number;
+  weeklyVelocity: number;
+  leadTimeDays: number;
+  safetyStockDays: number;
+  stockDays: number;
+  orderDeadlineDays: number;
+  urgency: UrgencyLevel;
+  reorderPoint: number;
+  price: number;
+  unitCost: number;
 }
 
-const inventoryData: InventoryRow[] = [
-  { ...topProducts[0], currentStock: 372, orderQty: 0   }, // ヒノキカッティングボード  62日
-  { ...topProducts[1], currentStock: 12,  orderQty: 30  }, // 有田焼マグカップ          17日 ← アラート
-  { ...topProducts[2], currentStock: 31,  orderQty: 0   }, // 南部鉄器急須              44日
-  { ...topProducts[3], currentStock: 234, orderQty: 0   }, // 和紙ノート                91日
-  { ...topProducts[4], currentStock: 60,  orderQty: 0   }, // 漆塗り箸セット            38日
-];
+interface OrderRecommendation {
+  id: string;
+  name: string;
+  sku: string;
+  currentStock: number;
+  weeklyVelocity: number;
+  leadTimeDays: number;
+  safetyStockDays: number;
+  recommendedQty: number;
+  urgency: UrgencyLevel;
+  unitCost: number;
+  price: number;
+}
 
-const ALERT_PRODUCT = inventoryData[1]; // 有田焼マグカップ
+interface SlowMoveItem {
+  id: string;
+  name: string;
+  sku: string;
+  currentStock: number;
+  turnoverDays: number;
+  stockValue: number;
+  level: SlowMoveLevel;
+  suggestion: string;
+  weeklyVelocity: number;
+  unitCost: number;
+}
 
-// ─── Demand forecast (past 15 days actual + next 15 days forecast) ────────────
+// ============================================================
+// ヘルパー関数
+// ============================================================
+function urgencyBg(u: UrgencyLevel) {
+  if (u === 'critical') return 'bg-red-50 border-red-200';
+  if (u === 'urgent') return 'bg-orange-50 border-orange-200';
+  if (u === 'warning') return 'bg-yellow-50 border-yellow-200';
+  return 'bg-white border-gray-200';
+}
+function urgencyBadge(u: UrgencyLevel) {
+  if (u === 'critical') return 'bg-red-100 text-red-700 border border-red-300';
+  if (u === 'urgent') return 'bg-orange-100 text-orange-700 border border-orange-300';
+  if (u === 'warning') return 'bg-yellow-100 text-yellow-700 border border-yellow-300';
+  return 'bg-green-100 text-green-700 border border-green-300';
+}
+function urgencyLabel(u: UrgencyLevel) {
+  if (u === 'critical') return '🔴 危機的';
+  if (u === 'urgent') return '🟠 緊急';
+  if (u === 'warning') return '🟡 注意';
+  return '🟢 正常';
+}
+function urgencyTextColor(u: UrgencyLevel) {
+  if (u === 'critical') return 'text-red-600';
+  if (u === 'urgent') return 'text-orange-600';
+  if (u === 'warning') return 'text-yellow-600';
+  return 'text-green-600';
+}
+function slowMoveBg(l: SlowMoveLevel) {
+  if (l === 'danger') return 'bg-red-50 border-red-200';
+  if (l === 'warning') return 'bg-yellow-50 border-yellow-200';
+  return 'bg-white border-gray-200';
+}
+function slowMoveBadge(l: SlowMoveLevel) {
+  if (l === 'danger') return 'bg-red-100 text-red-700';
+  if (l === 'warning') return 'bg-yellow-100 text-yellow-700';
+  return 'bg-gray-100 text-gray-600';
+}
+function slowMoveTextColor(l: SlowMoveLevel) {
+  if (l === 'danger') return 'text-red-600';
+  if (l === 'warning') return 'text-yellow-600';
+  return 'text-green-600';
+}
 
-interface DemandPoint { day: string; actual: number | null; forecast: number | null; }
-
-const demandData: DemandPoint[] = (() => {
-  const base = [6, 5, 8, 7, 6, 9, 11, 6, 5, 7, 6, 8, 7, 9, 10];
-  const forecast = [10, 11, 9, 12, 13, 10, 11, 12, 14, 13, 11, 12, 13, 15, 14];
-  const actual: DemandPoint[] = base.map((v, i) => ({
-    day: `05/${(i + 1).toString().padStart(2, '0')}`,
-    actual: v,
-    forecast: null,
-  }));
-  const pred: DemandPoint[] = forecast.map((v, i) => ({
-    day: `05/${(i + 16).toString().padStart(2, '0')}`,
-    actual: null,
-    forecast: v,
-  }));
-  return [...actual, ...pred];
-})();
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-const stockColor = (days: number) => {
-  if (days >= 30) return 'text-green-600';
-  if (days >= 14) return 'text-amber-600';
-  return 'text-red-500 font-semibold';
-};
-
-const stockBg = (days: number) => {
-  if (days >= 30) return 'bg-green-50 text-green-700';
-  if (days >= 14) return 'bg-amber-50 text-amber-700';
-  return 'bg-red-50 text-red-700';
-};
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
-export default function InventoryAgentPage() {
-  const [ready, setReady] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setReady(true), 1000); return () => clearTimeout(t); }, []);
-
+// ============================================================
+// メインコンポーネント
+// ============================================================
+export default function InventoryPage() {
+  const router = useRouter();
   const { toast } = useToast();
 
-  // Alert order button
-  const [alertOrdered, setAlertOrdered] = useState(false);
+  const [activeTab, setActiveTab] = useState('forecast');
 
-  // Per-row order state
-  const [ordered, setOrdered] = useState<Record<string, boolean>>({});
+  // --- タブ1: 在庫切れ予報 ---
+  const [showNormalItems, setShowNormalItems] = useState(false);
 
-  // PO form
-  const [supplier, setSupplier] = useState('');
-  const [lines, setLines] = useState([{ product: '', qty: '' }]);
-  const [poDone, setPoDone] = useState(false);
+  // --- タブ2: 発注数おすすめ ---
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(
+    new Set(['prod-002', 'prod-005'])
+  );
+  const [demandMultiplier, setDemandMultiplier] = useState<number>(1.0);
+  const [safetyStockPolicy, setSafetyStockPolicy] = useState<string>('standard');
+  const [budgetLimit, setBudgetLimit] = useState<string>('');
+  const [orderQtyOverrides, setOrderQtyOverrides] = useState<Record<string, number>>({});
+  const [showOrderPreview, setShowOrderPreview] = useState(false);
+  const [orderNotes, setOrderNotes] = useState('');
+  const [orderPreviewCopied, setOrderPreviewCopied] = useState(false);
 
-  if (!ready) return <PageSkeleton />;
+  // --- AI展開 ---
+  const [expandedActions, setExpandedActions] = useState<Record<string, string>>({});
+  const [loadingAI, setLoadingAI] = useState<Record<string, boolean>>({});
 
-  const handleAlertOrder = () => {
-    setAlertOrdered(true);
-    toast({ title: '発注書を作成しました', description: `${ALERT_PRODUCT.name} × 30個` });
-  };
+  // ============================================================
+  // 計算ロジック (useMemo)
+  // ============================================================
 
-  const handleRowOrder = (id: string, name: string) => {
-    setOrdered((s) => ({ ...s, [id]: true }));
-    toast({ title: '発注書を作成しました', description: name });
-  };
+  // タブ1: 在庫切れ予報
+  const forecasts = useMemo<StockForecast[]>(() => {
+    const today = new Date();
+    return topProducts
+      .filter(p => p.currentStock !== undefined)
+      .map(p => {
+        const cs = p.currentStock!;
+        const wv = p.weeklyVelocity!;
+        const lt = p.leadTimeDays!;
+        const ss = p.safetyStockDays!;
+        const dailyVelocity = wv / 7;
+        const stockDays = dailyVelocity > 0 ? Math.floor(cs / dailyVelocity) : 999;
+        const deadlineDate = new Date(today);
+        deadlineDate.setDate(today.getDate() + stockDays - lt - ss);
+        const orderDeadlineDays = Math.floor(
+          (deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        const reorderPoint = Math.ceil(dailyVelocity * (lt + ss));
+        let urgency: UrgencyLevel = 'normal';
+        if (orderDeadlineDays <= 0) urgency = 'critical';
+        else if (orderDeadlineDays <= 3) urgency = 'urgent';
+        else if (orderDeadlineDays <= 7) urgency = 'warning';
+        return {
+          id: p.id,
+          name: p.name,
+          sku: p.sku,
+          currentStock: cs,
+          weeklyVelocity: wv,
+          leadTimeDays: lt,
+          safetyStockDays: ss,
+          stockDays,
+          orderDeadlineDays,
+          urgency,
+          reorderPoint,
+          price: p.price,
+          unitCost: p.unitCost!,
+        };
+      })
+      .sort((a, b) => a.orderDeadlineDays - b.orderDeadlineDays);
+  }, []);
 
-  const addLine = () => setLines((l) => [...l, { product: '', qty: '' }]);
-  const removeLine = (i: number) => setLines((l) => l.filter((_, idx) => idx !== i));
-  const updateLine = (i: number, field: 'product' | 'qty', value: string) =>
-    setLines((l) => l.map((row, idx) => (idx === i ? { ...row, [field]: value } : row)));
+  // タブ2: 安全在庫倍率
+  const safetyMultiplier = useMemo(() => {
+    if (safetyStockPolicy === 'conservative') return 1.5;
+    if (safetyStockPolicy === 'aggressive') return 0.7;
+    return 1.0;
+  }, [safetyStockPolicy]);
 
-  const handleGeneratePO = () => {
-    setPoDone(true);
-    toast({ title: '発注書を作成しました（モック）', description: `仕入先: ${supplier || '未入力'}` });
-  };
+  // タブ2: 発注推奨
+  const orderRecommendations = useMemo<OrderRecommendation[]>(() => {
+    const today = new Date();
+    return topProducts
+      .filter(p => selectedProducts.has(p.id) && p.currentStock !== undefined)
+      .map(p => {
+        const cs = p.currentStock!;
+        const wv = p.weeklyVelocity!;
+        const lt = p.leadTimeDays!;
+        const ss = p.safetyStockDays!;
+        const dailyVelocity = (wv / 7) * demandMultiplier;
+        const effectiveSS = Math.ceil(ss * safetyMultiplier);
+        const recommendedQty = Math.max(
+          0,
+          Math.ceil(dailyVelocity * lt + dailyVelocity * effectiveSS - cs)
+        );
+        const stockDays = dailyVelocity > 0 ? Math.floor(cs / dailyVelocity) : 999;
+        const deadlineDate = new Date(today);
+        deadlineDate.setDate(today.getDate() + stockDays - lt - effectiveSS);
+        const ddDays = Math.floor(
+          (deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        let urgency: UrgencyLevel = 'normal';
+        if (ddDays <= 0) urgency = 'critical';
+        else if (ddDays <= 3) urgency = 'urgent';
+        else if (ddDays <= 7) urgency = 'warning';
+        return {
+          id: p.id, name: p.name, sku: p.sku,
+          currentStock: cs, weeklyVelocity: wv,
+          leadTimeDays: lt, safetyStockDays: ss,
+          recommendedQty, urgency,
+          unitCost: p.unitCost!, price: p.price,
+        };
+      });
+  }, [selectedProducts, demandMultiplier, safetyMultiplier]);
 
+  // タブ2: 合計金額
+  const totalOrderCost = useMemo(() => {
+    const budget = parseFloat(budgetLimit);
+    const total = orderRecommendations.reduce((sum, r) => {
+      const qty = orderQtyOverrides[r.id] !== undefined ? orderQtyOverrides[r.id] : r.recommendedQty;
+      return sum + qty * r.unitCost;
+    }, 0);
+    return { total, overBudget: !isNaN(budget) && total > budget };
+  }, [orderRecommendations, orderQtyOverrides, budgetLimit]);
+
+  // タブ3: 滞留在庫
+  const slowMoveItems = useMemo<SlowMoveItem[]>(() => {
+    return topProducts
+      .filter(p => p.currentStock !== undefined && p.turnoverDays !== undefined)
+      .map(p => {
+        const level: SlowMoveLevel =
+          p.turnoverDays! > 60 ? 'danger' : p.turnoverDays! > 30 ? 'warning' : 'normal';
+        const stockValue = p.currentStock! * p.unitCost!;
+        const suggestion =
+          level === 'danger'
+            ? '大幅値引きまたはバンドル販売を検討。広告費の削減も推奨。'
+            : level === 'warning'
+            ? '10〜15%の価格見直し、またはSNS・メルマガでの訴求強化を検討。'
+            : '現状維持。引き続き需要をモニタリング。';
+        return {
+          id: p.id, name: p.name, sku: p.sku,
+          currentStock: p.currentStock!, turnoverDays: p.turnoverDays!,
+          stockValue, level, suggestion,
+          weeklyVelocity: p.weeklyVelocity!, unitCost: p.unitCost!,
+        };
+      })
+      .sort((a, b) => b.turnoverDays - a.turnoverDays);
+  }, []);
+
+  // ============================================================
+  // イベントハンドラ
+  // ============================================================
+  function toggleProduct(id: string) {
+    setSelectedProducts(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function fetchAIAdvice(key: string, prompt: string) {
+    if (expandedActions[key]) {
+      setExpandedActions(prev => { const n = { ...prev }; delete n[key]; return n; });
+      return;
+    }
+    setLoadingAI(prev => ({ ...prev, [key]: true }));
+    try {
+      const res = await fetch('/api/inventory-advice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json();
+      setExpandedActions(prev => ({
+        ...prev,
+        [key]: data.advice ?? data.error ?? 'アドバイスを取得できませんでした',
+      }));
+    } catch {
+      setExpandedActions(prev => ({
+        ...prev,
+        [key]: 'AIへの接続に失敗しました。再度お試しください。',
+      }));
+    } finally {
+      setLoadingAI(prev => ({ ...prev, [key]: false }));
+    }
+  }
+
+  function copyOrderPreview() {
+    const lines = orderRecommendations.map(r => {
+      const qty = orderQtyOverrides[r.id] !== undefined ? orderQtyOverrides[r.id] : r.recommendedQty;
+      return `${r.name} (${r.sku}): ${qty}個 × ¥${r.unitCost.toLocaleString()} = ¥${(qty * r.unitCost).toLocaleString()}`;
+    });
+    const text = [
+      `【発注リスト】${new Date().toLocaleDateString('ja-JP')}`,
+      ...lines,
+      `合計: ¥${totalOrderCost.total.toLocaleString()}`,
+      orderNotes ? `備考: ${orderNotes}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      setOrderPreviewCopied(true);
+      setTimeout(() => setOrderPreviewCopied(false), 2000);
+    });
+  }
+
+  function handleApproveOrder() {
+    toast({
+      title: '✅ 発注内容を承認しました',
+      description: `${orderRecommendations.length}品目・合計¥${totalOrderCost.total.toLocaleString()}の発注を受け付けました。`,
+    });
+    setShowOrderPreview(false);
+  }
+
+  // ============================================================
+  // 集計値
+  // ============================================================
+  const visibleForecasts = showNormalItems
+    ? forecasts
+    : forecasts.filter(f => f.urgency !== 'normal');
+
+  const criticalCount = forecasts.filter(f => f.urgency === 'critical').length;
+  const urgentCount = forecasts.filter(f => f.urgency === 'urgent').length;
+  const warningCount = forecasts.filter(f => f.urgency === 'warning').length;
+  const slowDangerCount = slowMoveItems.filter(i => i.level === 'danger').length;
+
+  // ============================================================
+  // レンダリング
+  // ============================================================
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* ── 1. Header ─────────────────────────────────────── */}
-      <div className="flex items-start justify-between pb-4 border-b">
+    <div className="p-6 space-y-6">
+      {/* ヘッダー */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">在庫AI</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            需要予測・発注タイミング・滞留在庫をAIが管理します
+          <h1 className="text-2xl font-bold text-gray-900">📦 在庫管理 AI</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            在庫切れ予測・発注推奨・滞留アラートをAIが自動分析
           </p>
         </div>
-        <Link href="/dashboard" className="text-sm text-blue-900 hover:text-blue-700 transition-colors mt-1 shrink-0">
-          ← ダッシュボードに戻る
-        </Link>
-      </div>
-
-      <AgentBriefCard category="inventory" />
-
-      {/* ── 2. Urgent alert ───────────────────────────────── */}
-      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle size={18} className="text-red-600 mt-0.5 shrink-0" />
-            <div>
-              <p className="font-semibold text-red-800 text-sm">⚠️ 在庫切れアラート</p>
-              <p className="text-sm text-red-700 mt-0.5">
-                <span className="font-medium">{ALERT_PRODUCT.name}</span>：残{ALERT_PRODUCT.currentStock}個、推定切れまで約{ALERT_PRODUCT.stockDays}日
-              </p>
-            </div>
-          </div>
-          {alertOrdered ? (
-            <span className="text-xs font-medium text-teal-700 bg-teal-100 px-3 py-1.5 rounded-md shrink-0">
-              ✓ 発注済み
+        <div className="flex flex-wrap gap-2">
+          {criticalCount > 0 && (
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-300">
+              🔴 危機的 {criticalCount}品目
             </span>
-          ) : (
-            <button
-              onClick={handleAlertOrder}
-              className="bg-red-600 text-white text-xs font-medium px-4 py-1.5 rounded-md hover:bg-red-700 transition-colors shrink-0"
-            >
-              今すぐ発注する
-            </button>
+          )}
+          {urgentCount > 0 && (
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-300">
+              🟠 緊急 {urgentCount}品目
+            </span>
+          )}
+          {warningCount > 0 && (
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-300">
+              🟡 注意 {warningCount}品目
+            </span>
           )}
         </div>
       </div>
 
-      {/* ── 3. Inventory table ────────────────────────────── */}
-      <div className="bg-white border rounded-xl p-6">
-        <h2 className="font-semibold text-slate-900 mb-4">在庫状況</h2>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-xs">商品名</TableHead>
-              <TableHead className="text-xs text-right">現在庫数</TableHead>
-              <TableHead className="text-xs text-right">週次販売数</TableHead>
-              <TableHead className="text-xs text-right">在庫残日数</TableHead>
-              <TableHead className="text-xs text-right">発注推奨数</TableHead>
-              <TableHead className="text-xs">アクション</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {inventoryData.map((row) => (
-              <TableRow key={row.id}>
-                <TableCell className="text-sm font-medium text-slate-800">{row.name}</TableCell>
-                <TableCell className="text-sm text-right text-slate-600">{row.currentStock}個</TableCell>
-                <TableCell className="text-sm text-right text-slate-600">{row.weeklySales}個</TableCell>
-                <TableCell className="text-right">
-                  <span className={`text-sm font-medium ${stockColor(row.stockDays)}`}>
-                    {row.stockDays}日
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  {row.orderQty > 0 ? (
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${stockBg(row.stockDays)}`}>
-                      {row.orderQty}個
-                    </span>
-                  ) : (
-                    <span className="text-xs text-slate-400">—</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {ordered[row.id] ? (
-                    <span className="text-xs font-medium text-teal-700">✓ 発注済み</span>
-                  ) : (
-                    <button
-                      onClick={() => handleRowOrder(row.id, row.name)}
-                      className="text-xs text-blue-900 border border-blue-900 px-3 py-1 rounded-md hover:bg-blue-50 transition-colors"
-                    >
-                      発注する
-                    </button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      {/* タブ */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-3 w-full max-w-lg">
+          <TabsTrigger value="forecast">📉 在庫切れ予報</TabsTrigger>
+          <TabsTrigger value="order">🛒 発注数おすすめ</TabsTrigger>
+          <TabsTrigger value="slowmove">🐌 滞留在庫アラート</TabsTrigger>
+        </TabsList>
 
-      {/* ── 4. Demand forecast chart ──────────────────────── */}
-      <div className="bg-white border rounded-xl p-6">
-        <h2 className="font-semibold text-slate-900 mb-4">📈 今後30日の需要予測</h2>
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={demandData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis
-              dataKey="day"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 10, fill: '#94a3b8' }}
-              interval={4}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 11, fill: '#94a3b8' }}
-              width={28}
-            />
-            <Tooltip
-              contentStyle={{ border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12 }}
-              formatter={(v, name) => [
-                `${v}個`,
-                name === 'actual' ? '過去実績' : '需要予測',
-              ]}
-              labelFormatter={(l) => String(l)}
-            />
-            <Legend
-              formatter={(v) => (v === 'actual' ? '過去実績' : '需要予測')}
-              iconSize={12}
-              wrapperStyle={{ fontSize: 12 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="actual"
-              stroke="#1e3a8a"
-              strokeWidth={2}
-              dot={false}
-              connectNulls={false}
-            />
-            <Line
-              type="monotone"
-              dataKey="forecast"
-              stroke="#f59e0b"
-              strokeWidth={2}
-              strokeDasharray="5 4"
-              dot={false}
-              connectNulls={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* ── 5. PO form ────────────────────────────────────── */}
-      <div className="bg-white border rounded-xl p-6">
-        <h2 className="font-semibold text-slate-900 mb-4">📋 発注書を作成する</h2>
-
-        <div className="space-y-4">
-          {/* Supplier */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-600">仕入先名</label>
-            <Input
-              placeholder="例: 岩手南部鉄器工房"
-              value={supplier}
-              onChange={(e) => { setSupplier(e.target.value); setPoDone(false); }}
-              className="max-w-sm"
-            />
+        {/* ══════════════════════════════════════════════
+            TAB 1: 在庫切れ予報
+        ══════════════════════════════════════════════ */}
+        <TabsContent value="forecast" className="mt-4 space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <p className="text-sm text-gray-600">
+              発注リードタイム＋安全在庫を加味した「発注期限」を自動計算します。
+            </p>
+            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showNormalItems}
+                onChange={e => setShowNormalItems(e.target.checked)}
+                className="w-4 h-4 rounded"
+              />
+              正常品目も表示
+            </label>
           </div>
 
-          {/* Line items */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-slate-600">商品・数量</label>
-            {lines.map((line, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Input
-                  placeholder="商品名"
-                  value={line.product}
-                  onChange={(e) => { updateLine(i, 'product', e.target.value); setPoDone(false); }}
-                  className="flex-1"
-                />
-                <Input
-                  type="number"
-                  placeholder="数量"
-                  value={line.qty}
-                  onChange={(e) => { updateLine(i, 'qty', e.target.value); setPoDone(false); }}
-                  className="w-24"
-                />
-                {lines.length > 1 && (
-                  <button
-                    onClick={() => removeLine(i)}
-                    className="text-slate-400 hover:text-red-500 transition-colors p-1"
+          {visibleForecasts.length === 0 ? (
+            <div className="text-center py-16 text-gray-400">
+              <div className="text-5xl mb-3">✅</div>
+              <p className="font-medium">すべての商品が正常な在庫水準です</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {visibleForecasts.map(item => (
+                <div
+                  key={item.id}
+                  className={`rounded-xl border p-4 ${urgencyBg(item.urgency)}`}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-gray-900">{item.name}</span>
+                        <span className="text-xs text-gray-400">{item.sku}</span>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${urgencyBadge(item.urgency)}`}>
+                          {urgencyLabel(item.urgency)}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-600">
+                        <span>現在庫: <b className="text-gray-900">{item.currentStock}個</b></span>
+                        <span>週間販売: <b className="text-gray-900">{item.weeklyVelocity}個/週</b></span>
+                        <span>在庫日数: <b className="text-gray-900">{item.stockDays}日</b></span>
+                        <span>LT: <b className="text-gray-900">{item.leadTimeDays}日</b></span>
+                        <span>安全在庫: <b className="text-gray-900">{item.safetyStockDays}日分</b></span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-2xl font-bold ${urgencyTextColor(item.urgency)}`}>
+                        {item.orderDeadlineDays <= 0 ? '超過中' : `${item.orderDeadlineDays}日後`}
+                      </div>
+                      <div className="text-xs text-gray-500">発注期限</div>
+                    </div>
+                  </div>
+
+                  {/* 発注点表示 + アクション */}
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <span className="text-xs text-gray-500">
+                      発注点: <b>{item.reorderPoint}個</b>
+                      {item.currentStock <= item.reorderPoint && (
+                        <span className="ml-1 text-red-600 font-semibold">← 発注点を下回っています</span>
+                      )}
+                    </span>
+                    <button
+                      onClick={() =>
+                        fetchAIAdvice(
+                          item.id,
+                          `商品: ${item.name}、現在庫: ${item.currentStock}個、週間販売: ${item.weeklyVelocity}個、リードタイム: ${item.leadTimeDays}日、安全在庫: ${item.safetyStockDays}日。在庫切れリスクへの具体的な対処法を3点で教えてください。`
+                        )
+                      }
+                      className="text-xs px-3 py-1 rounded-lg bg-white border border-blue-300 text-blue-600 hover:bg-blue-50 transition-colors"
+                    >
+                      {loadingAI[item.id]
+                        ? '⏳ 分析中...'
+                        : expandedActions[item.id]
+                        ? '▲ AIアドバイスを閉じる'
+                        : '✨ AIアドバイスを見る'}
+                    </button>
+                    {item.urgency !== 'normal' && (
+                      <button
+                        onClick={() => {
+                          setActiveTab('order');
+                          setSelectedProducts(prev => new Set([...prev, item.id]));
+                        }}
+                        className="text-xs px-3 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                      >
+                        → 発注おすすめへ
+                      </button>
+                    )}
+                  </div>
+
+                  {/* AIアドバイス */}
+                  {expandedActions[item.id] && (
+                    <div className="mt-3 p-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-gray-700 whitespace-pre-line">
+                      <span className="font-semibold text-blue-700">✨ AI アドバイス</span>
+                      <p className="mt-1">{expandedActions[item.id]}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ══════════════════════════════════════════════
+            TAB 2: 発注数おすすめ
+        ══════════════════════════════════════════════ */}
+        <TabsContent value="order" className="mt-4 space-y-5">
+          {/* 設定パネル */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-gray-50 border border-gray-200">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">需要倍率</label>
+              <select
+                value={demandMultiplier}
+                onChange={e => setDemandMultiplier(parseFloat(e.target.value))}
+                className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                <option value={0.8}>×0.8（控えめ）</option>
+                <option value={1.0}>×1.0（標準）</option>
+                <option value={1.2}>×1.2（強気）</option>
+                <option value={1.5}>×1.5（積極的）</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">安全在庫ポリシー</label>
+              <select
+                value={safetyStockPolicy}
+                onChange={e => setSafetyStockPolicy(e.target.value)}
+                className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                <option value="aggressive">薄め（×0.7）</option>
+                <option value="standard">標準（×1.0）</option>
+                <option value="conservative">厚め（×1.5）</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">予算上限（任意）</label>
+              <Input
+                type="number"
+                placeholder="例: 500000"
+                value={budgetLimit}
+                onChange={e => setBudgetLimit(e.target.value)}
+                className="text-sm"
+              />
+            </div>
+          </div>
+
+          {/* 商品選択チップ */}
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">発注対象商品を選択</p>
+            <div className="flex flex-wrap gap-2">
+              {topProducts.map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => toggleProduct(p.id)}
+                  className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                    selectedProducts.has(p.id)
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 推奨カード */}
+          {orderRecommendations.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-10">商品を選択してください</p>
+          ) : (
+            <div className="space-y-3">
+              {orderRecommendations.map(item => {
+                const qty =
+                  orderQtyOverrides[item.id] !== undefined
+                    ? orderQtyOverrides[item.id]
+                    : item.recommendedQty;
+                const cost = qty * item.unitCost;
+                return (
+                  <div
+                    key={item.id}
+                    className={`rounded-xl border p-4 ${urgencyBg(item.urgency)}`}
                   >
-                    <Trash2 size={15} />
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-gray-900">{item.name}</span>
+                          <span className="text-xs text-gray-400">{item.sku}</span>
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${urgencyBadge(item.urgency)}`}>
+                            {urgencyLabel(item.urgency)}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-500">
+                          <span>現在庫: {item.currentStock}個</span>
+                          <span>週間: {item.weeklyVelocity}個</span>
+                          <span>LT: {item.leadTimeDays}日</span>
+                          <span>仕入単価: ¥{item.unitCost.toLocaleString()}</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-blue-700">¥{cost.toLocaleString()}</div>
+                        <div className="text-xs text-gray-500">発注金額</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">発注数:</span>
+                        <Input
+                          type="number"
+                          value={qty}
+                          min={0}
+                          onChange={e => {
+                            const val = parseInt(e.target.value) || 0;
+                            setOrderQtyOverrides(prev => ({ ...prev, [item.id]: val }));
+                          }}
+                          className="w-24 text-sm text-center"
+                        />
+                        <span className="text-xs text-gray-400">個</span>
+                        {orderQtyOverrides[item.id] !== undefined &&
+                          orderQtyOverrides[item.id] !== item.recommendedQty && (
+                            <button
+                              onClick={() =>
+                                setOrderQtyOverrides(prev => {
+                                  const n = { ...prev };
+                                  delete n[item.id];
+                                  return n;
+                                })
+                              }
+                              className="text-xs text-gray-400 underline"
+                            >
+                              推奨値に戻す({item.recommendedQty}個)
+                            </button>
+                          )}
+                      </div>
+                      <button
+                        onClick={() =>
+                          fetchAIAdvice(
+                            `order-${item.id}`,
+                            `商品: ${item.name}、現在庫: ${item.currentStock}個、週間販売: ${item.weeklyVelocity}個、推奨発注数: ${item.recommendedQty}個、リードタイム: ${item.leadTimeDays}日。この発注量の妥当性と注意点を教えてください。`
+                          )
+                        }
+                        className="text-xs px-3 py-1 rounded-lg bg-white border border-blue-300 text-blue-600 hover:bg-blue-50 transition-colors"
+                      >
+                        {loadingAI[`order-${item.id}`]
+                          ? '⏳'
+                          : expandedActions[`order-${item.id}`]
+                          ? '▲ 閉じる'
+                          : '✨ AI分析'}
+                      </button>
+                    </div>
+
+                    {expandedActions[`order-${item.id}`] && (
+                      <div className="mt-3 p-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-gray-700 whitespace-pre-line">
+                        <span className="font-semibold text-blue-700">✨ AI 分析</span>
+                        <p className="mt-1">{expandedActions[`order-${item.id}`]}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* 合計金額 */}
+              <div
+                className={`rounded-xl border p-4 ${
+                  totalOrderCost.overBudget
+                    ? 'bg-red-50 border-red-300'
+                    : 'bg-blue-50 border-blue-200'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-semibold text-gray-900">発注合計金額</span>
+                    {budgetLimit && (
+                      <span
+                        className={`ml-2 text-xs ${
+                          totalOrderCost.overBudget
+                            ? 'text-red-600 font-bold'
+                            : 'text-green-600'
+                        }`}
+                      >
+                        {totalOrderCost.overBudget
+                          ? `⚠️ 予算超過（上限¥${parseFloat(budgetLimit).toLocaleString()}）`
+                          : '✅ 予算内'}
+                      </span>
+                    )}
+                  </div>
+                  <span
+                    className={`text-2xl font-bold ${
+                      totalOrderCost.overBudget ? 'text-red-600' : 'text-blue-700'
+                    }`}
+                  >
+                    ¥{totalOrderCost.total.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              {/* 備考 + プレビューボタン */}
+              <div className="space-y-2">
+                <Input
+                  placeholder="発注備考（任意）: 急ぎ便希望、など"
+                  value={orderNotes}
+                  onChange={e => setOrderNotes(e.target.value)}
+                  className="text-sm"
+                />
+                <button
+                  onClick={() => setShowOrderPreview(!showOrderPreview)}
+                  className="w-full py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors text-sm"
+                >
+                  {showOrderPreview ? '▲ 発注プレビューを閉じる' : '📋 発注プレビューを確認する'}
+                </button>
+              </div>
+
+              {/* 発注プレビュー */}
+              {showOrderPreview && (
+                <div className="rounded-xl border border-blue-300 bg-white p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-gray-900">📋 発注プレビュー</h3>
+                    <span className="text-xs text-gray-400">
+                      {new Date().toLocaleDateString('ja-JP')}
+                    </span>
+                  </div>
+                  <div className="divide-y divide-gray-100">
+                    {orderRecommendations.map(item => {
+                      const qty =
+                        orderQtyOverrides[item.id] !== undefined
+                          ? orderQtyOverrides[item.id]
+                          : item.recommendedQty;
+                      return (
+                        <div key={item.id} className="py-2 flex justify-between text-sm">
+                          <div>
+                            <span className="font-medium">{item.name}</span>
+                            <span className="ml-2 text-xs text-gray-400">{item.sku}</span>
+                          </div>
+                          <div className="text-right">
+                            <span>
+                              {qty}個 × ¥{item.unitCost.toLocaleString()}
+                            </span>
+                            <span className="ml-2 font-semibold text-blue-700">
+                              = ¥{(qty * item.unitCost).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="border-t pt-3 flex justify-between font-bold">
+                    <span>合計</span>
+                    <span className="text-blue-700">¥{totalOrderCost.total.toLocaleString()}</span>
+                  </div>
+                  {orderNotes && (
+                    <p className="text-sm text-gray-600">備考: {orderNotes}</p>
+                  )}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={copyOrderPreview}
+                      className="flex-1 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      {orderPreviewCopied ? '✅ コピー完了' : '📋 クリップボードにコピー'}
+                    </button>
+                    <button
+                      onClick={handleApproveOrder}
+                      className="flex-1 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors"
+                    >
+                      ✅ この内容で発注承認
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ══════════════════════════════════════════════
+            TAB 3: 滞留在庫アラート
+        ══════════════════════════════════════════════ */}
+        <TabsContent value="slowmove" className="mt-4 space-y-4">
+          <p className="text-sm text-gray-600">
+            在庫回転日数が長い商品をAIが検出し、対策を提案します。
+          </p>
+
+          {/* 凡例 */}
+          <div className="flex gap-5 flex-wrap">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="w-3 h-3 rounded-full bg-red-400 inline-block" />
+              <span className="text-gray-600">
+                危険（60日超）: <b>{slowMoveItems.filter(i => i.level === 'danger').length}品</b>
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="w-3 h-3 rounded-full bg-yellow-400 inline-block" />
+              <span className="text-gray-600">
+                注意（30〜60日）: <b>{slowMoveItems.filter(i => i.level === 'warning').length}品</b>
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="w-3 h-3 rounded-full bg-green-400 inline-block" />
+              <span className="text-gray-600">
+                正常（30日以内）: <b>{slowMoveItems.filter(i => i.level === 'normal').length}品</b>
+              </span>
+            </div>
+          </div>
+
+          {slowDangerCount > 0 && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+              ⚠️ <b>{slowDangerCount}品目</b>が危険水準の滞留在庫です。キャッシュフローへの影響を確認してください。
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {slowMoveItems.map(item => (
+              <div
+                key={item.id}
+                className={`rounded-xl border p-4 ${slowMoveBg(item.level)}`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-gray-900">{item.name}</span>
+                      <span className="text-xs text-gray-400">{item.sku}</span>
+                      <span
+                        className={`text-xs font-semibold px-2 py-0.5 rounded-full ${slowMoveBadge(item.level)}`}
+                      >
+                        {item.level === 'danger'
+                          ? '🔴 危険'
+                          : item.level === 'warning'
+                          ? '🟡 注意'
+                          : '🟢 正常'}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-600">
+                      <span>
+                        現在庫: <b className="text-gray-900">{item.currentStock}個</b>
+                      </span>
+                      <span>
+                        週間販売: <b className="text-gray-900">{item.weeklyVelocity}個/週</b>
+                      </span>
+                      <span>
+                        仕入単価: <b className="text-gray-900">¥{item.unitCost.toLocaleString()}</b>
+                      </span>
+                      <span>
+                        在庫資産額: <b className="text-gray-900">¥{item.stockValue.toLocaleString()}</b>
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`text-2xl font-bold ${slowMoveTextColor(item.level)}`}>
+                      {item.turnoverDays}日
+                    </div>
+                    <div className="text-xs text-gray-500">在庫回転日数</div>
+                  </div>
+                </div>
+
+                {/* 推奨アクション */}
+                <div className="mt-3 p-3 rounded-lg bg-white/70 border border-gray-200 text-sm text-gray-700">
+                  💡 <span className="font-medium">推奨アクション:</span> {item.suggestion}
+                </div>
+
+                <div className="mt-2 flex gap-2 flex-wrap">
+                  <button
+                    onClick={() =>
+                      fetchAIAdvice(
+                        `slow-${item.id}`,
+                        `商品: ${item.name}、現在庫: ${item.currentStock}個、在庫回転日数: ${item.turnoverDays}日、在庫資産額: ¥${item.stockValue.toLocaleString()}、週間販売: ${item.weeklyVelocity}個。滞留在庫を解消するための具体的な販促・価格戦略を3点提案してください。`
+                      )
+                    }
+                    className="text-xs px-3 py-1 rounded-lg bg-white border border-blue-300 text-blue-600 hover:bg-blue-50 transition-colors"
+                  >
+                    {loadingAI[`slow-${item.id}`]
+                      ? '⏳ 分析中...'
+                      : expandedActions[`slow-${item.id}`]
+                      ? '▲ 閉じる'
+                      : '✨ AI販促提案'}
                   </button>
+                  {item.level !== 'normal' && (
+                    <button
+                      onClick={() => router.push('/agents/marketing')}
+                      className="text-xs px-3 py-1 rounded-lg bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200 transition-colors"
+                    >
+                      → マーケティングエージェントへ
+                    </button>
+                  )}
+                </div>
+
+                {expandedActions[`slow-${item.id}`] && (
+                  <div className="mt-3 p-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-gray-700 whitespace-pre-line">
+                    <span className="font-semibold text-blue-700">✨ AI 販促提案</span>
+                    <p className="mt-1">{expandedActions[`slow-${item.id}`]}</p>
+                  </div>
                 )}
               </div>
             ))}
-            <button
-              onClick={addLine}
-              className="flex items-center gap-1.5 text-xs text-blue-900 hover:text-blue-700 transition-colors w-fit"
-            >
-              <Plus size={13} />
-              商品を追加
-            </button>
           </div>
-
-          {/* Submit */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleGeneratePO}
-              className="flex items-center gap-2 bg-blue-900 text-white text-sm px-5 py-2 rounded-md hover:bg-blue-800 transition-colors"
-            >
-              <FileText size={15} />
-              発注書PDFを生成する
-            </button>
-            {poDone && (
-              <span className="text-sm text-teal-700 font-medium animate-in fade-in duration-200">
-                ✓ 発注書を作成しました（モック）
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

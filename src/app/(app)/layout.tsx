@@ -10,6 +10,7 @@ import {
   Package,
   BarChart3,
   MessageSquare,
+  Wallet,
   Settings,
   Bell,
   Menu,
@@ -26,6 +27,7 @@ const navItems = [
   { label: '在庫AI',        icon: Package,          href: '/agents/inventory' },
   { label: '分析AI',        icon: BarChart3,        href: '/agents/analytics' },
   { label: 'AIチャット',    icon: MessageSquare,    href: '/chat' },
+  { label: '入金・手数料管理', icon: Wallet,          href: '/cashflow' },
 ];
 
 const allNavItems = [

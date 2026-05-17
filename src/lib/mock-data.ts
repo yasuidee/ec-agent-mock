@@ -255,6 +255,256 @@ export const topProducts: Product[] = [
 ];
 
 // ============================================================
+// キャッシュフロー管理
+// ============================================================
+
+// Shopify手数料設定
+export type ShopifyFeeConfig = {
+  planName: string;           // プラン名
+  monthlyFee: number;         // 月額料金
+  transactionFeeRate: number; // 取引手数料率(%)
+  paymentFeeRate: number;     // 決済手数料率(%)
+  payoutDelayDays: number;    // 入金遅延日数
+};
+
+export const shopifyFeeConfig: ShopifyFeeConfig = {
+  planName: 'Shopify(ベーシック)',
+  monthlyFee: 3773,
+  transactionFeeRate: 2.0,
+  paymentFeeRate: 3.4,
+  payoutDelayDays: 3,
+};
+
+// 月次キャッシュフローデータ
+export type MonthlyCashflow = {
+  month: string;             // YYYY-MM
+  label: string;             // 表示用ラベル(例: 5月)
+
+  // 入金
+  shopifyRevenue: number;    // Shopify売上
+  shopifyFee: number;        // Shopify手数料(取引+決済)
+  shopifyMonthlyFee: number; // 月額費用
+  netIncome: number;         // 実際の入金額(売上-手数料)
+  payoutDate: string;        // 実際の入金日(YYYY-MM-DD)
+
+  // 出金(翌月末払い)
+  inventoryCost: number;     // 仕入高(前月分)
+  adSpend: number;           // 広告費(前月分)
+  otherFixed: number;        // その他固定費
+  totalOutflow: number;      // 出金合計
+
+  // 収支
+  netCashflow: number;       // 入金-出金
+  cumulativeCash: number;    // 累計キャッシュ残高
+};
+
+export const monthlyCashflows: MonthlyCashflow[] = [
+  {
+    month: '2026-02', label: '2月',
+    shopifyRevenue: 3820000,
+    shopifyFee: 206280,
+    shopifyMonthlyFee: 3773,
+    netIncome: 3609947,
+    payoutDate: '2026-03-03',
+    inventoryCost: 1490000,
+    adSpend: 380000,
+    otherFixed: 85000,
+    totalOutflow: 1955000,
+    netCashflow: 1654947,
+    cumulativeCash: 4200000,
+  },
+  {
+    month: '2026-03', label: '3月',
+    shopifyRevenue: 4150000,
+    shopifyFee: 224100,
+    shopifyMonthlyFee: 3773,
+    netIncome: 3922127,
+    payoutDate: '2026-04-03',
+    inventoryCost: 1650000,
+    adSpend: 420000,
+    otherFixed: 85000,
+    totalOutflow: 2155000,
+    netCashflow: 1767127,
+    cumulativeCash: 5967127,
+  },
+  {
+    month: '2026-04', label: '4月',
+    shopifyRevenue: 4890000,
+    shopifyFee: 264060,
+    shopifyMonthlyFee: 3773,
+    netIncome: 4622167,
+    payoutDate: '2026-05-03',
+    inventoryCost: 1980000,
+    adSpend: 520000,
+    otherFixed: 85000,
+    totalOutflow: 2585000,
+    netCashflow: 2037167,
+    cumulativeCash: 8004294,
+  },
+  {
+    month: '2026-05', label: '5月(今月)',
+    shopifyRevenue: 5000000,
+    shopifyFee: 270000,
+    shopifyMonthlyFee: 3773,
+    netIncome: 4726227,
+    payoutDate: '2026-06-03',
+    inventoryCost: 2100000,
+    adSpend: 480000,
+    otherFixed: 85000,
+    totalOutflow: 2665000,
+    netCashflow: 2061227,
+    cumulativeCash: 10065521,
+  },
+  {
+    month: '2026-06', label: '6月(予測)',
+    shopifyRevenue: 5200000,
+    shopifyFee: 280800,
+    shopifyMonthlyFee: 3773,
+    netIncome: 4915427,
+    payoutDate: '2026-07-03',
+    inventoryCost: 2200000,
+    adSpend: 500000,
+    otherFixed: 85000,
+    totalOutflow: 2785000,
+    netCashflow: 2130427,
+    cumulativeCash: 12195948,
+  },
+  {
+    month: '2026-07', label: '7月(予測)',
+    shopifyRevenue: 4800000,
+    shopifyFee: 259200,
+    shopifyMonthlyFee: 3773,
+    netIncome: 4537027,
+    payoutDate: '2026-08-03',
+    inventoryCost: 2500000,
+    adSpend: 600000,
+    otherFixed: 85000,
+    totalOutflow: 3185000,
+    netCashflow: 1352027,
+    cumulativeCash: 13547975,
+  },
+  {
+    month: '2026-08', label: '8月(予測)',
+    shopifyRevenue: 4200000,
+    shopifyFee: 226800,
+    shopifyMonthlyFee: 3773,
+    netIncome: 3969427,
+    payoutDate: '2026-09-03',
+    inventoryCost: 2800000,
+    adSpend: 700000,
+    otherFixed: 85000,
+    totalOutflow: 3585000,
+    netCashflow: 384427,
+    cumulativeCash: 13932402,
+  },
+  {
+    month: '2026-09', label: '9月(予測)',
+    shopifyRevenue: 3800000,
+    shopifyFee: 205200,
+    shopifyMonthlyFee: 3773,
+    netIncome: 3591027,
+    payoutDate: '2026-10-03',
+    inventoryCost: 3200000,
+    adSpend: 800000,
+    otherFixed: 85000,
+    totalOutflow: 4085000,
+    netCashflow: -493973,
+    cumulativeCash: 13438429,
+  },
+  {
+    month: '2026-10', label: '10月(予測)',
+    shopifyRevenue: 5500000,
+    shopifyFee: 297000,
+    shopifyMonthlyFee: 3773,
+    netIncome: 5199227,
+    payoutDate: '2026-11-03',
+    inventoryCost: 2000000,
+    adSpend: 500000,
+    otherFixed: 85000,
+    totalOutflow: 2585000,
+    netCashflow: 2614227,
+    cumulativeCash: 16052656,
+  },
+  {
+    month: '2026-11', label: '11月(予測)',
+    shopifyRevenue: 6800000,
+    shopifyFee: 367200,
+    shopifyMonthlyFee: 3773,
+    netIncome: 6429027,
+    payoutDate: '2026-12-03',
+    inventoryCost: 2800000,
+    adSpend: 680000,
+    otherFixed: 85000,
+    totalOutflow: 3565000,
+    netCashflow: 2864027,
+    cumulativeCash: 18916683,
+  },
+];
+
+// 今月の入金スケジュール(日次)
+export type DailyPayout = {
+  date: string;         // YYYY-MM-DD
+  orderDate: string;    // 対応する注文日
+  amount: number;       // 入金額
+  fee: number;          // 差し引き手数料
+  grossAmount: number;  // 売上総額
+  status: 'completed' | 'scheduled';
+};
+
+export const dailyPayouts: DailyPayout[] = [
+  // 過去分(completed)
+  {
+    date: '2026-05-01', orderDate: '2026-04-28',
+    grossAmount: 187400, fee: 11620, amount: 175780, status: 'completed',
+  },
+  {
+    date: '2026-05-02', orderDate: '2026-04-29',
+    grossAmount: 203600, fee: 12623, amount: 190977, status: 'completed',
+  },
+  {
+    date: '2026-05-05', orderDate: '2026-04-30',
+    grossAmount: 165800, fee: 10280, amount: 155520, status: 'completed',
+  },
+  {
+    date: '2026-05-07', orderDate: '2026-05-02',
+    grossAmount: 221300, fee: 13720, amount: 207580, status: 'completed',
+  },
+  {
+    date: '2026-05-08', orderDate: '2026-05-05',
+    grossAmount: 198700, fee: 12319, amount: 186381, status: 'completed',
+  },
+  // 予定分(scheduled)
+  {
+    date: '2026-05-19', orderDate: '2026-05-16',
+    grossAmount: 215000, fee: 13330, amount: 201670, status: 'scheduled',
+  },
+  {
+    date: '2026-05-20', orderDate: '2026-05-17',
+    grossAmount: 189000, fee: 11718, amount: 177282, status: 'scheduled',
+  },
+  {
+    date: '2026-05-21', orderDate: '2026-05-18',
+    grossAmount: 234000, fee: 14508, amount: 219492, status: 'scheduled',
+  },
+  {
+    date: '2026-05-22', orderDate: '2026-05-19',
+    grossAmount: 198000, fee: 12276, amount: 185724, status: 'scheduled',
+  },
+  {
+    date: '2026-05-27', orderDate: '2026-05-24',
+    grossAmount: 256000, fee: 15872, amount: 240128, status: 'scheduled',
+  },
+  {
+    date: '2026-05-28', orderDate: '2026-05-25',
+    grossAmount: 223000, fee: 13826, amount: 209174, status: 'scheduled',
+  },
+  {
+    date: '2026-05-29', orderDate: '2026-05-26',
+    grossAmount: 187000, fee: 11594, amount: 175406, status: 'scheduled',
+  },
+];
+
+// ============================================================
 // アクセス流入元
 // ============================================================
 

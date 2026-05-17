@@ -35,6 +35,35 @@ import {
   type Product,
 } from '@/lib/mock-data';
 
+// ─── Weekly task type (compatible subset of BriefAction) ─────────────────────
+
+interface WeeklyTask {
+  id: string;
+  priority: 'urgent' | 'high' | 'normal';
+  title: string;
+  expectedImpact: number;
+  steps: string[];
+  agent: string;
+  category: 'build' | 'marketing' | 'inventory' | 'analytics';
+  description: string;
+  urgency: 'high' | 'medium' | 'low';
+  status: string;
+  reasoning: string;
+}
+
+function weeklyTaskToBriefAction(task: WeeklyTask): BriefAction {
+  return {
+    id: task.id,
+    category: task.category,
+    title: task.title,
+    description: task.description,
+    expectedImpact: `実施すると月+¥${task.expectedImpact.toLocaleString()}が見込めます`,
+    reasoning: task.reasoning,
+    urgency: task.urgency,
+    status: 'pending',
+  };
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const yen = (n: number) => '¥' + n.toLocaleString('ja-JP');
@@ -183,11 +212,59 @@ function KpiCard({
 export default function DashboardPage() {
   const { toast } = useToast();
   const [ready, setReady] = useState(false);
+  const [weeklyReportTasks, setWeeklyReportTasks] = useState<BriefAction[] | null>(null);
+  const [isMonday, setIsMonday] = useState(false);
+  const [isMondayDemo, setIsMondayDemo] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setReady(true), 1000);
     return () => clearTimeout(t);
   }, []);
+
+  // Load weekly report tasks on Monday (or demo mode)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const today = new Date();
+    const isActualMonday = today.getDay() === 1;
+    if (isActualMonday) {
+      try {
+        const stored = localStorage.getItem('weeklyReportData');
+        if (stored) {
+          const weeklyData = JSON.parse(stored);
+          const storedDate = new Date(weeklyData.generatedAt);
+          const daysDiff = (today.getTime() - storedDate.getTime()) / (1000 * 60 * 60 * 24);
+          if (daysDiff <= 7 && Array.isArray(weeklyData.tasks) && weeklyData.tasks.length > 0) {
+            setWeeklyReportTasks((weeklyData.tasks as WeeklyTask[]).map(weeklyTaskToBriefAction));
+            setIsMonday(true);
+          }
+        }
+      } catch { /* ignore */ }
+    }
+  }, []);
+
+  // Demo: apply Monday mode when toggle is turned on
+  useEffect(() => {
+    if (!isMondayDemo) return;
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem('weeklyReportData');
+      if (stored) {
+        const weeklyData = JSON.parse(stored);
+        if (Array.isArray(weeklyData.tasks) && weeklyData.tasks.length > 0) {
+          setWeeklyReportTasks((weeklyData.tasks as WeeklyTask[]).map(weeklyTaskToBriefAction));
+          setIsMonday(true);
+          return;
+        }
+      }
+    } catch { /* ignore */ }
+    // No report data: revert to normal
+    setIsMonday(false);
+    setWeeklyReportTasks(null);
+  }, [isMondayDemo]);
+
+  const displayActions: BriefAction[] = (isMonday && weeklyReportTasks)
+    ? weeklyReportTasks
+    : briefActions;
 
   const initialStates = Object.fromEntries(
     briefActions.map((a) => [a.id, a.status as 'pending' | 'approved' | 'rejected'])
@@ -211,7 +288,7 @@ export default function DashboardPage() {
     toast({ title: 'デモをリセットしました', description: 'すべてのアクションをリセットしました' });
   };
 
-  const pendingCount = Object.values(actionStates).filter((v) => v === 'pending').length;
+  const pendingCount = displayActions.filter((a) => (actionStates[a.id] ?? 'pending') === 'pending').length;
   const totalSessions = trafficSources.reduce((s, t) => s + t.sessions, 0);
 
   if (!ready) return <DashboardSkeleton />;
@@ -234,6 +311,15 @@ export default function DashboardPage() {
             <RotateCcw size={11} />
             デモをリセット
           </button>
+          <label className="flex items-center gap-1.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isMondayDemo}
+              onChange={(e) => setIsMondayDemo(e.target.checked)}
+              className="w-3.5 h-3.5 accent-blue-900 cursor-pointer"
+            />
+            <span className="text-xs text-slate-400">月曜日として表示</span>
+          </label>
           <span>最終更新: 数分前</span>
           <button className="p-1.5 rounded-md hover:bg-slate-100 transition-colors">
             <RefreshCw size={15} />
@@ -244,7 +330,14 @@ export default function DashboardPage() {
       {/* ── 2. Brief Actions ───────────────────────────────────── */}
       <div className="bg-white border border-amber-200 rounded-xl p-6">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="font-semibold text-lg text-slate-900">🟡 今朝のブリーフ</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold text-lg text-slate-900">🟡 今朝のブリーフ</h2>
+            {isMonday && weeklyReportTasks && (
+              <span className="text-xs font-medium bg-blue-900 text-white px-2.5 py-1 rounded-full">
+                月曜レポート連動
+              </span>
+            )}
+          </div>
           {pendingCount > 0 ? (
             <span className="text-xs font-medium bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full">
               {pendingCount}つのアクション待ち
@@ -255,15 +348,28 @@ export default function DashboardPage() {
             </span>
           )}
         </div>
-        <p className="text-sm text-slate-500 mb-4">
+        <p className="text-sm text-slate-500 mb-3">
           AIが分析した本日の優先アクション。承認するだけで実行されます。
         </p>
+
+        {isMonday && weeklyReportTasks && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-4 flex items-center gap-2">
+            <span className="text-blue-600 text-sm">📊</span>
+            <span className="text-sm text-blue-700">
+              今週の週次レポートからのアクションプランを表示しています
+            </span>
+            <a href="/agents/analytics" className="text-xs text-blue-900 underline ml-auto">
+              レポートを見る
+            </a>
+          </div>
+        )}
+
         <div className="grid grid-cols-3 gap-4">
-          {briefActions.map((action) => (
+          {displayActions.map((action) => (
             <ActionCard
               key={action.id}
               action={action}
-              actionState={actionStates[action.id]}
+              actionState={actionStates[action.id] ?? 'pending'}
               onApprove={() => approve(action.id)}
               onReject={() => reject(action.id)}
             />

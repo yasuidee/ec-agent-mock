@@ -21,7 +21,7 @@ import {
 import { useState, useEffect, useMemo } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { kpiSummary, topProducts } from '@/lib/mock-data';
+import { kpiSummary, topProducts, dailySales } from '@/lib/mock-data';
 import { AgentBriefCard } from '@/components/AgentBriefCard';
 import { PageSkeleton } from '@/components/PageSkeleton';
 
@@ -94,6 +94,49 @@ interface ActionItem {
   steps: string[]; agent: string;
 }
 
+// ─── Weekly Report types ──────────────────────────────────────────────────────
+
+interface WeeklyTask {
+  id: string;
+  priority: 'urgent' | 'high' | 'normal';
+  title: string;
+  expectedImpact: number;
+  steps: string[];
+  agent: string;
+  category: 'build' | 'marketing' | 'inventory' | 'analytics';
+  description: string;
+  urgency: 'high' | 'medium' | 'low';
+  status: string;
+  reasoning: string;
+}
+
+interface WeeklyGoodPoint { title: string; detail: string; revenueImpact: number; }
+interface WeeklyBadPoint  { title: string; cause: string; lossImpact: number; }
+interface WeeklyDanger    { title: string; description: string; riskAmount: number; }
+
+interface WeeklyReportContent {
+  weekLabel: string;
+  overallRating: 'good' | 'normal' | 'bad';
+  goodPoints: WeeklyGoodPoint[];
+  badPoints: WeeklyBadPoint[];
+  nextWeekTasks: WeeklyTask[];
+  dangers: WeeklyDanger[];
+}
+
+interface WeeklyReportHistoryItem {
+  weekLabel: string;
+  generatedAt: string;
+  overallRating: 'good' | 'normal' | 'bad';
+  data: WeeklyReportContent;
+}
+
+interface WeeklyReportStoredData {
+  generatedAt: string;
+  weekStartDate: string;
+  report: WeeklyReportContent;
+  tasks: WeeklyTask[];
+}
+
 const ADDITIONAL_GOAL_OPTIONS = [
   '新規顧客比率を上げたい', 'リピート率を上げたい', '客単価を上げたい',
   '広告費を削減したい', '粗利率を改善したい', '在庫回転率を上げたい',
@@ -121,6 +164,19 @@ const PRIORITY_CONFIG = {
 export default function AnalyticsAgentPage() {
   const [ready, setReady] = useState(false);
   useEffect(() => { const t = setTimeout(() => setReady(true), 1000); return () => clearTimeout(t); }, []);
+
+  // Load weekly report data from localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem('weeklyReportData');
+      if (stored) setCurrentReportData(JSON.parse(stored));
+      const hist = localStorage.getItem('weeklyReports');
+      if (hist) setWeeklyReports(JSON.parse(hist));
+      const ar = localStorage.getItem('autoReport');
+      if (ar === 'true') setAutoReport(true);
+    } catch { /* ignore */ }
+  }, []);
 
   const [period, setPeriod] = useState<Period>('今月');
 
@@ -151,6 +207,15 @@ export default function AnalyticsAgentPage() {
   const [checkedTasks, setCheckedTasks] = useState<Record<string, boolean>>({});
   const [showAllWeeks, setShowAllWeeks] = useState(false);
   const [planCopied, setPlanCopied] = useState(false);
+
+  // ── Weekly Report state ────────────────────────────────────────────────────
+  const [reportLoading, setReportLoading] = useState(false);
+  const [weeklyReports, setWeeklyReports] = useState<WeeklyReportHistoryItem[]>([]);
+  const [currentReportData, setCurrentReportData] = useState<WeeklyReportStoredData | null>(null);
+  const [expandedReportIdx, setExpandedReportIdx] = useState<number | null>(null);
+  const [reportCopied, setReportCopied] = useState(false);
+  const [autoReport, setAutoReport] = useState(false);
+  const [dangerToastIdx, setDangerToastIdx] = useState<number | null>(null);
 
   // ── Simulator state ────────────────────────────────────────────────────────
   const [selectedProductId, setSelectedProductId] = useState('');
@@ -264,6 +329,93 @@ export default function AnalyticsAgentPage() {
       clearInterval(interval);
       setPlanLoadingProgress(100);
       setTimeout(() => { setPlanLoading(false); }, 400);
+    }
+  };
+
+  // ── Weekly Report handler ─────────────────────────────────────────────────
+  const handleGenerateReport = async () => {
+    setReportLoading(true);
+
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const weekStart = new Date(now);
+    weekStart.setDate(diff);
+    const weekStartStr = weekStart.toISOString().split('T')[0];
+
+    const half = Math.floor(dailySales.length / 2);
+    const prevRevenue = dailySales.slice(0, half).reduce((s, d) => s + d.revenue, 0);
+    const revenue     = dailySales.slice(half).reduce((s, d) => s + d.revenue, 0);
+    const prevOrders  = dailySales.slice(0, half).reduce((s, d) => s + d.orders, 0);
+    const orders      = dailySales.slice(half).reduce((s, d) => s + d.orders, 0);
+
+    try {
+      const res = await fetch('/api/weekly-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          weekStartDate: weekStartStr,
+          currentData: {
+            revenue,
+            prevRevenue,
+            orders,
+            prevOrders,
+            cvr: kpiSummary.cvr,
+            prevCvr: +(kpiSummary.cvr * 0.92).toFixed(2),
+            grossProfit: Math.round(revenue * kpiSummary.grossMarginRate / 100),
+            prevGrossProfit: Math.round(prevRevenue * (kpiSummary.grossMarginRate + kpiSummary.grossMarginRateDelta) / 100),
+            adSpend: 480000,
+            roas: kpiSummary.roas,
+            stockoutCount: 2,
+            repeatRate: 23,
+          },
+        }),
+      });
+      const reportData: WeeklyReportContent = await res.json();
+
+      const storedData: WeeklyReportStoredData = {
+        generatedAt: new Date().toISOString(),
+        weekStartDate: weekStartStr,
+        report: reportData,
+        tasks: reportData.nextWeekTasks,
+      };
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('weeklyReportData', JSON.stringify(storedData));
+          const histRaw = localStorage.getItem('weeklyReports') || '[]';
+          const hist: WeeklyReportHistoryItem[] = JSON.parse(histRaw);
+          hist.unshift({
+            weekLabel: reportData.weekLabel,
+            generatedAt: storedData.generatedAt,
+            overallRating: reportData.overallRating,
+            data: reportData,
+          });
+          localStorage.setItem('weeklyReports', JSON.stringify(hist.slice(0, 8)));
+          if (autoReport) localStorage.setItem('autoReport', 'true');
+        } catch { /* ignore */ }
+      }
+
+      setCurrentReportData(storedData);
+      setWeeklyReports((prev) =>
+        [
+          { weekLabel: reportData.weekLabel, generatedAt: storedData.generatedAt, overallRating: reportData.overallRating, data: reportData },
+          ...prev,
+        ].slice(0, 8),
+      );
+      setExpandedReportIdx(0);
+    } catch { /* silently fail with mock */ }
+    finally { setReportLoading(false); }
+  };
+
+  const handleAutoReportToggle = () => {
+    const next = !autoReport;
+    setAutoReport(next);
+    if (typeof window !== 'undefined') {
+      try {
+        if (next) localStorage.setItem('autoReport', 'true');
+        else localStorage.removeItem('autoReport');
+      } catch { /* ignore */ }
     }
   };
 
@@ -1320,6 +1472,295 @@ export default function AnalyticsAgentPage() {
                 🚨 現在の設定では販売するたびに赤字です。原価・手数料・広告費を見直してください。
               </p>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* ── 週次レポート ──────────────────────────────────── */}
+      <div className="bg-white border rounded-xl p-6">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-5">
+          <div>
+            <h2 className="font-semibold text-lg text-slate-900">📊 自動改善レポート</h2>
+            <p className="text-sm text-slate-500 mt-0.5">毎週月曜日8:00に自動生成されます</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-slate-400">
+              {currentReportData
+                ? `最終生成: ${new Date(currentReportData.generatedAt).toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                : '未生成'}
+            </span>
+            <button
+              onClick={handleGenerateReport}
+              disabled={reportLoading}
+              className="border text-sm px-4 py-2 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+            >
+              {reportLoading && (
+                <span className="inline-block h-3.5 w-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+              )}
+              {reportLoading ? '生成中...' : '今すぐ生成する'}
+            </button>
+          </div>
+        </div>
+
+        {/* Past reports accordion */}
+        {weeklyReports.length === 0 ? (
+          <div className="bg-slate-50 rounded-lg p-8 text-center mb-5">
+            <p className="text-sm text-slate-500">
+              まだレポートがありません。「今すぐ生成する」でレポートを作成してください。
+            </p>
+          </div>
+        ) : (
+          <div className="border rounded-lg overflow-hidden mb-5">
+            {weeklyReports.map((report, idx) => {
+              const ratingConfig: Record<string, { label: string; className: string }> = {
+                good:   { label: '好調',   className: 'bg-green-100 text-green-700' },
+                normal: { label: '普通',   className: 'bg-slate-100 text-slate-600' },
+                bad:    { label: '要注意', className: 'bg-red-100 text-red-700' },
+              };
+              const rc = ratingConfig[report.overallRating] ?? ratingConfig.normal;
+              const isExpanded = expandedReportIdx === idx;
+              return (
+                <div key={idx}>
+                  <div
+                    className={`px-4 py-3 flex justify-between items-center border-b last:border-b-0 ${
+                      isExpanded ? 'bg-blue-50' : 'hover:bg-slate-50'
+                    } transition-colors`}
+                  >
+                    <p className="text-sm font-medium text-slate-800">
+                      {report.data.weekLabel}のレポート
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${rc.className}`}>
+                        {rc.label}
+                      </span>
+                      <button
+                        onClick={() => setExpandedReportIdx(isExpanded ? null : idx)}
+                        className="text-sm text-blue-900 hover:underline"
+                      >
+                        {isExpanded ? '閉じる' : '詳細を見る'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Inline report body */}
+                  {isExpanded && (() => {
+                    const r = report.data;
+                    const half2 = Math.floor(dailySales.length / 2);
+                    const wRevenue = dailySales.slice(half2).reduce((s, d) => s + d.revenue, 0);
+                    const pRevenue = dailySales.slice(0, half2).reduce((s, d) => s + d.revenue, 0);
+                    const wOrders  = dailySales.slice(half2).reduce((s, d) => s + d.orders, 0);
+                    const pOrders  = dailySales.slice(0, half2).reduce((s, d) => s + d.orders, 0);
+                    const wProfit  = Math.round(wRevenue * kpiSummary.grossMarginRate / 100);
+                    const pProfit  = Math.round(pRevenue * (kpiSummary.grossMarginRate + kpiSummary.grossMarginRateDelta) / 100);
+                    const revDelta = +((wRevenue - pRevenue) / pRevenue * 100).toFixed(1);
+                    const ordDelta = +((wOrders - pOrders) / pOrders * 100).toFixed(1);
+                    const cvrDelta = kpiSummary.cvrDelta;
+                    const profDelta = +((wProfit - pProfit) / pProfit * 100).toFixed(1);
+
+                    const overallEmoji = r.overallRating === 'good' ? '📈 好調な週でした' : r.overallRating === 'normal' ? '📊 普通の週でした' : '📉 厳しい週でした';
+                    const overallBadgeClass = r.overallRating === 'good' ? 'bg-green-100 text-green-700' : r.overallRating === 'normal' ? 'bg-slate-100 text-slate-600' : 'bg-red-100 text-red-700';
+
+                    const priorityBadge: Record<string, string> = {
+                      urgent: 'bg-red-100 text-red-700',
+                      high:   'bg-amber-100 text-amber-700',
+                      normal: 'bg-blue-100 text-blue-700',
+                    };
+                    const priorityLabel: Record<string, string> = {
+                      urgent: '🔴 最優先',
+                      high:   '🟡 優先',
+                      normal: '🔵 通常',
+                    };
+                    const agentBadge: Record<string, string> = {
+                      build:     'bg-purple-100 text-purple-700',
+                      marketing: 'bg-blue-100 text-blue-700',
+                      inventory: 'bg-teal-100 text-teal-700',
+                      analytics: 'bg-amber-100 text-amber-700',
+                    };
+                    const agentLabel: Record<string, string> = {
+                      build: '構築AI', marketing: '集客AI', inventory: '在庫AI', analytics: '分析AI',
+                    };
+                    const agentPath: Record<string, string> = {
+                      build: '/agents/build', marketing: '/agents/marketing',
+                      inventory: '/agents/inventory', analytics: '/agents/analytics',
+                    };
+
+                    const deltaEl = (v: number) =>
+                      v >= 0
+                        ? <span className="text-green-600 text-xs">↑ +{v}%</span>
+                        : <span className="text-red-500 text-xs">↓ {v}%</span>;
+
+                    return (
+                      <div className="px-4 pb-6 pt-4 space-y-5 border-t bg-white">
+                        {/* Section 1: Weekly KPI */}
+                        <div className="bg-white border rounded-xl p-5">
+                          <h3 className="text-sm font-semibold text-slate-700 mb-3">今週のサマリー</h3>
+                          <div className="grid grid-cols-4 gap-3">
+                            {[
+                              { label: '今週の売上',   value: yen(wRevenue), d: revDelta },
+                              { label: '注文数',       value: `${wOrders}件`, d: ordDelta },
+                              { label: 'CVR',          value: `${kpiSummary.cvr}%`, d: cvrDelta },
+                              { label: '粗利',         value: yen(wProfit), d: profDelta },
+                            ].map((item) => (
+                              <div key={item.label} className="bg-slate-50 rounded-lg p-3 text-center">
+                                <p className="text-xs text-slate-500">{item.label}</p>
+                                <p className="text-base font-semibold text-slate-800 mt-0.5">{item.value}</p>
+                                <div className="mt-0.5">{deltaEl(item.d)}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-4 text-center">
+                            <span className={`inline-block text-base px-6 py-2 rounded-full font-medium ${overallBadgeClass}`}>
+                              {overallEmoji}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Section 2: Good points */}
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-5">
+                          <h3 className="text-sm font-medium text-green-700 mb-3">✅ 良かったこと</h3>
+                          <div className="space-y-2">
+                            {r.goodPoints.map((g, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <span className="shrink-0 w-4 h-4 bg-green-500 rounded-full mt-0.5" />
+                                <div>
+                                  <p className="text-sm text-green-800">{g.title}</p>
+                                  <p className="text-xs text-green-600 mt-0.5">{g.detail}</p>
+                                  <p className="text-xs text-green-600 font-medium mt-0.5">
+                                    → 売上+¥{g.revenueImpact.toLocaleString()}に貢献
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Section 3: Bad points */}
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-5">
+                          <h3 className="text-sm font-medium text-red-700 mb-3">⚠️ 改善が必要なこと</h3>
+                          <div className="space-y-3">
+                            {r.badPoints.map((b, i) => (
+                              <div key={i}>
+                                <p className="font-medium text-sm text-red-800">{b.title}</p>
+                                <p className="text-xs text-red-600 mt-0.5">原因: {b.cause}</p>
+                                <p className="text-xs text-red-500 font-medium mt-0.5">
+                                  → 機会損失 約¥{b.lossImpact.toLocaleString()}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Section 4: Next week tasks */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
+                          <h3 className="text-sm font-medium text-blue-700">🚀 来週のアクションプラン</h3>
+                          <p className="text-xs text-blue-500 mt-1 mb-3">
+                            ※月曜日の今朝のブリーフに自動反映されます
+                          </p>
+                          <div className="space-y-3">
+                            {r.nextWeekTasks.map((task) => (
+                              <div key={task.id} className="bg-white border rounded-lg p-4">
+                                <div className="flex justify-between items-start">
+                                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${priorityBadge[task.priority] ?? 'bg-slate-100 text-slate-600'}`}>
+                                    {priorityLabel[task.priority] ?? '通常'}
+                                  </span>
+                                  <button
+                                    onClick={() => router.push(agentPath[task.agent] ?? '/')}
+                                    className={`text-xs font-medium px-2.5 py-1 rounded-full ${agentBadge[task.agent] ?? 'bg-slate-100 text-slate-600'} hover:opacity-80 transition-opacity`}
+                                  >
+                                    {agentLabel[task.agent] ?? task.agent}
+                                  </button>
+                                </div>
+                                <p className="font-medium text-sm text-slate-800 mt-2">{task.title}</p>
+                                <p className="text-xs text-slate-500 mt-1">
+                                  実施すると+¥{task.expectedImpact.toLocaleString()}が見込めます
+                                </p>
+                                <ul className="mt-1 space-y-0.5">
+                                  {task.steps.map((step, si) => (
+                                    <li key={si} className="text-xs text-slate-400">• {step}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Section 5: Dangers */}
+                        <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-5">
+                          <h3 className="font-medium text-base text-orange-700 mb-3">🚨 放置すると危険なこと</h3>
+                          <div className="space-y-3">
+                            {r.dangers.map((danger, di) => (
+                              <div key={di} className="bg-white border border-orange-200 rounded-lg p-4 relative">
+                                <p className="font-medium text-sm text-orange-800">{danger.title}</p>
+                                <p className="text-xs text-orange-600 mt-1">{danger.description}</p>
+                                <p className="text-xs text-red-500 font-medium mt-1">
+                                  放置すると月間-¥{danger.riskAmount.toLocaleString()}の損失リスク
+                                </p>
+                                <div className="mt-2 relative">
+                                  <button
+                                    onClick={() => {
+                                      setDangerToastIdx(di);
+                                      setTimeout(() => setDangerToastIdx(null), 3000);
+                                    }}
+                                    className="bg-orange-500 text-white text-xs px-3 py-1.5 rounded hover:bg-orange-600 transition-colors"
+                                  >
+                                    今すぐ対処する
+                                  </button>
+                                  {dangerToastIdx === di && (
+                                    <span className="ml-3 text-xs text-orange-700 font-medium animate-in fade-in duration-200">
+                                      対処タスクをブリーフに追加しました
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Section 6: Actions */}
+                        <div className="border-t pt-4 flex items-center gap-3 flex-wrap">
+                          <button
+                            onClick={() => {
+                              const text = [
+                                `【${r.weekLabel} 週次レポート】`,
+                                `総合評価: ${r.overallRating === 'good' ? '好調' : r.overallRating === 'normal' ? '普通' : '要注意'}`,
+                                '',
+                                '■ 良かったこと',
+                                ...r.goodPoints.map((g) => `・${g.title}`),
+                                '',
+                                '■ 改善が必要なこと',
+                                ...r.badPoints.map((b) => `・${b.title}`),
+                                '',
+                                '■ 来週のアクション',
+                                ...r.nextWeekTasks.map((t) => `・${t.title}`),
+                              ].join('\n');
+                              navigator.clipboard.writeText(text);
+                              setReportCopied(true);
+                              setTimeout(() => setReportCopied(false), 2000);
+                            }}
+                            className="border text-sm px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                          >
+                            {reportCopied ? '✓ コピーしました' : 'レポートをコピーする'}
+                          </button>
+                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={autoReport}
+                              onChange={handleAutoReportToggle}
+                              className="w-4 h-4 accent-blue-900 cursor-pointer"
+                            />
+                            <span className="text-sm text-slate-600">次回も自動生成する</span>
+                          </label>
+                          <a href="/dashboard" className="text-sm text-blue-900 hover:underline ml-auto">
+                            ダッシュボードに戻る
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

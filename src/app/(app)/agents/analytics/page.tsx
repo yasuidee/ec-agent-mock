@@ -446,7 +446,6 @@ export default function AnalyticsAgentPage() {
           <TabsTrigger value="business">💹 経営分析</TabsTrigger>
           <TabsTrigger value="weekly">📋 週次レポート</TabsTrigger>
         </TabsList>
-      </Tabs>
 
       <TabsContent value="sales">
       <div className="space-y-6">
@@ -1784,6 +1783,7 @@ export default function AnalyticsAgentPage() {
       </div>
       </div>
       </TabsContent>
+      </Tabs>
     </div>
   );
 }

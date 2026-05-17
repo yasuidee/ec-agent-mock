@@ -214,7 +214,6 @@ export default function DashboardPage() {
   const [ready, setReady] = useState(false);
   const [weeklyReportTasks, setWeeklyReportTasks] = useState<BriefAction[] | null>(null);
   const [isMonday, setIsMonday] = useState(false);
-  const [isMondayDemo, setIsMondayDemo] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setReady(true), 1000);
@@ -241,26 +240,6 @@ export default function DashboardPage() {
       } catch { /* ignore */ }
     }
   }, []);
-
-  // Demo: apply Monday mode when toggle is turned on
-  useEffect(() => {
-    if (!isMondayDemo) return;
-    if (typeof window === 'undefined') return;
-    try {
-      const stored = localStorage.getItem('weeklyReportData');
-      if (stored) {
-        const weeklyData = JSON.parse(stored);
-        if (Array.isArray(weeklyData.tasks) && weeklyData.tasks.length > 0) {
-          setWeeklyReportTasks((weeklyData.tasks as WeeklyTask[]).map(weeklyTaskToBriefAction));
-          setIsMonday(true);
-          return;
-        }
-      }
-    } catch { /* ignore */ }
-    // No report data: revert to normal
-    setIsMonday(false);
-    setWeeklyReportTasks(null);
-  }, [isMondayDemo]);
 
   const displayActions: BriefAction[] = (isMonday && weeklyReportTasks)
     ? weeklyReportTasks
@@ -311,15 +290,6 @@ export default function DashboardPage() {
             <RotateCcw size={11} />
             デモをリセット
           </button>
-          <label className="flex items-center gap-1.5 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={isMondayDemo}
-              onChange={(e) => setIsMondayDemo(e.target.checked)}
-              className="w-3.5 h-3.5 accent-blue-900 cursor-pointer"
-            />
-            <span className="text-xs text-slate-400">月曜日として表示</span>
-          </label>
           <span>最終更新: 数分前</span>
           <button className="p-1.5 rounded-md hover:bg-slate-100 transition-colors">
             <RefreshCw size={15} />

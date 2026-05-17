@@ -280,6 +280,7 @@ export default function MarketingAgentPage() {
   const [t1BudgetCap, setT1BudgetCap] = useState('700000');
   const [t1Competitor, setT1Competitor] = useState('normal');
   const [t1Loading, setT1Loading] = useState(false);
+  const [t1Error, setT1Error] = useState(false);
   const [t1Result, setT1Result] = useState<BudgetJudgeResult | null>(null);
   const [t1BudgetCopied, setT1BudgetCopied] = useState(false);
   const [t1Toast, setT1Toast] = useState(false);
@@ -294,6 +295,7 @@ export default function MarketingAgentPage() {
   // Tab 2: Ad Stop Judge
   const [adRows, setAdRows] = useState<AdRow[]>(initialAdRows);
   const [t2Loading, setT2Loading] = useState(false);
+  const [t2Error, setT2Error] = useState(false);
   const [t2Result, setT2Result] = useState<AdStopResult | null>(null);
 
   // Tab 3: Product to advertise (frontend only)
@@ -306,6 +308,7 @@ export default function MarketingAgentPage() {
   ]);
   const [t4Benchmark, setT4Benchmark] = useState('craft');
   const [t4Loading, setT4Loading] = useState(false);
+  const [t4Error, setT4Error] = useState(false);
   const [t4Result, setT4Result] = useState<PageImprovementResult | null>(null);
 
   if (!ready) return <PageSkeleton />;
@@ -333,6 +336,7 @@ export default function MarketingAgentPage() {
   const handleBudgetJudge = async () => {
     setT1Loading(true);
     setT1Result(null);
+    setT1Error(false);
     try {
       const res = await fetch('/api/ad-budget-judge', {
         method: 'POST',
@@ -353,6 +357,7 @@ export default function MarketingAgentPage() {
       setT1Result(data);
     } catch {
       setT1Result(null);
+      setT1Error(true);
     } finally {
       setT1Loading(false);
     }
@@ -390,6 +395,7 @@ export default function MarketingAgentPage() {
   const handleAdStopJudge = async () => {
     setT2Loading(true);
     setT2Result(null);
+    setT2Error(false);
     try {
       const res = await fetch('/api/ad-stop-judge', {
         method: 'POST',
@@ -400,6 +406,7 @@ export default function MarketingAgentPage() {
       setT2Result(data);
     } catch {
       setT2Result(null);
+      setT2Error(true);
     } finally {
       setT2Loading(false);
     }
@@ -425,6 +432,7 @@ export default function MarketingAgentPage() {
   const handlePageImprovement = async () => {
     setT4Loading(true);
     setT4Result(null);
+    setT4Error(false);
     try {
       const res = await fetch('/api/page-improvement', {
         method: 'POST',
@@ -438,6 +446,7 @@ export default function MarketingAgentPage() {
       setT4Result(data);
     } catch {
       setT4Result(null);
+      setT4Error(true);
     } finally {
       setT4Loading(false);
     }
@@ -533,6 +542,9 @@ export default function MarketingAgentPage() {
           )}
         </div>
       </div>
+
+      {/* ── Separator ─────────────────────────────────────── */}
+      <hr className="border-slate-200" />
 
       {/* ── 4. 広告判断アシスタント ───────────────────────── */}
       <div className="bg-white border rounded-xl p-6">
@@ -695,6 +707,19 @@ export default function MarketingAgentPage() {
                 )}
               </button>
             </div>
+
+            {/* Error */}
+            {!t1Loading && t1Error && (
+              <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+                <p className="text-sm text-red-600">分析中にエラーが発生しました。再試行してください。</p>
+                <button
+                  onClick={handleBudgetJudge}
+                  className="text-sm border border-red-300 text-red-600 px-3 py-1.5 rounded hover:bg-red-100 transition-colors shrink-0 ml-4"
+                >
+                  再試行
+                </button>
+              </div>
+            )}
 
             {/* Result */}
             {t1Result && (
@@ -892,6 +917,19 @@ export default function MarketingAgentPage() {
                 )}
               </button>
             </div>
+
+            {/* Error */}
+            {!t2Loading && t2Error && (
+              <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+                <p className="text-sm text-red-600">分析中にエラーが発生しました。再試行してください。</p>
+                <button
+                  onClick={handleAdStopJudge}
+                  className="text-sm border border-red-300 text-red-600 px-3 py-1.5 rounded hover:bg-red-100 transition-colors shrink-0 ml-4"
+                >
+                  再試行
+                </button>
+              </div>
+            )}
 
             {/* Results */}
             {t2Result && (
@@ -1284,6 +1322,19 @@ export default function MarketingAgentPage() {
                 )}
               </button>
             </div>
+
+            {/* Error */}
+            {!t4Loading && t4Error && (
+              <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+                <p className="text-sm text-red-600">分析中にエラーが発生しました。再試行してください。</p>
+                <button
+                  onClick={handlePageImprovement}
+                  className="text-sm border border-red-300 text-red-600 px-3 py-1.5 rounded hover:bg-red-100 transition-colors shrink-0 ml-4"
+                >
+                  再試行
+                </button>
+              </div>
+            )}
 
             {/* Results */}
             {t4Result && (

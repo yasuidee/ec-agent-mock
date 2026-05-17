@@ -19,7 +19,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { useState, useEffect, useMemo } from 'react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { kpiSummary, topProducts, dailySales } from '@/lib/mock-data';
 import { AgentBriefCard } from '@/components/AgentBriefCard';
@@ -178,6 +178,7 @@ export default function AnalyticsAgentPage() {
     } catch { /* ignore */ }
   }, []);
 
+  const [mainTab, setMainTab] = useState('sales');
   const [period, setPeriod] = useState<Period>('今月');
 
   const router = useRouter();
@@ -437,6 +438,18 @@ export default function AnalyticsAgentPage() {
       />
 
       <AgentBriefCard category="analytics" />
+
+      {/* ── Main navigation tabs ──────────────────────────── */}
+      <Tabs value={mainTab} onValueChange={setMainTab}>
+        <TabsList>
+          <TabsTrigger value="sales">📊 売上分析</TabsTrigger>
+          <TabsTrigger value="business">💹 経営分析</TabsTrigger>
+          <TabsTrigger value="weekly">📋 週次レポート</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      <TabsContent value="sales">
+      <div className="space-y-6">
 
       {/* ── 2. Period tabs ────────────────────────────────── */}
       <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
@@ -826,6 +839,12 @@ export default function AnalyticsAgentPage() {
           );
         })()}
       </div>
+
+      </div>
+      </TabsContent>
+
+      <TabsContent value="business">
+      <div className="space-y-6">
 
       {/* ── 9. Goal Planner ──────────────────────────────── */}
       <div className="bg-white border rounded-xl p-6">
@@ -1469,6 +1488,12 @@ export default function AnalyticsAgentPage() {
         )}
       </div>
 
+      </div>
+      </TabsContent>
+
+      <TabsContent value="weekly">
+      <div className="space-y-6">
+
       {/* ── 週次レポート ──────────────────────────────────── */}
       <div className="bg-white border rounded-xl p-6">
         {/* Header */}
@@ -1757,6 +1782,8 @@ export default function AnalyticsAgentPage() {
           </div>
         )}
       </div>
+      </div>
+      </TabsContent>
     </div>
   );
 }

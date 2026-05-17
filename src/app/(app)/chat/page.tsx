@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { Send, Bot } from 'lucide-react';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Input } from '@/components/ui/input';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -131,14 +131,11 @@ function ChatInner() {
       {/* ── Main chat area ────────────────────────────────── */}
       <div className="col-span-3 flex flex-col overflow-hidden bg-slate-50">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-3 bg-white border-b shrink-0">
-          <div>
-            <h1 className="text-base font-semibold text-slate-900">AIチャット</h1>
-            <p className="text-xs text-slate-500">EC Agentが売上・在庫・広告をサポートします</p>
-          </div>
-          <Link href="/dashboard" className="text-sm text-blue-900 hover:text-blue-700 transition-colors shrink-0">
-            ← ダッシュボードに戻る
-          </Link>
+        <div className="bg-white px-6 pt-6 shrink-0">
+          <PageHeader
+            title="AIチャット"
+            description="EC Agentが売上・在庫・広告をサポートします"
+          />
         </div>
 
         {/* Message list */}

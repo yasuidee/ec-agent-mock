@@ -15,19 +15,27 @@ import {
   Bell,
   Menu,
   X,
+  ChevronDown,
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Toaster } from '@/components/ui/toaster';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navItems = [
-  { label: 'ダッシュボード', icon: LayoutDashboard, href: '/dashboard' },
-  { label: '構築AI',        icon: Sparkles,         href: '/agents/build' },
-  { label: '集客AI',        icon: Megaphone,        href: '/agents/marketing' },
-  { label: '在庫AI',        icon: Package,          href: '/agents/inventory' },
-  { label: '分析AI',        icon: BarChart3,        href: '/agents/analytics' },
-  { label: 'AIチャット',    icon: MessageSquare,    href: '/chat' },
+  { label: 'ダッシュボード',   icon: LayoutDashboard, href: '/dashboard' },
+  { label: '構築AI',           icon: Sparkles,        href: '/agents/build' },
+  { label: '集客AI',           icon: Megaphone,       href: '/agents/marketing' },
+  { label: '在庫AI',           icon: Package,         href: '/agents/inventory' },
+  { label: '分析AI',           icon: BarChart3,       href: '/agents/analytics' },
   { label: '入金・手数料管理', icon: Wallet,          href: '/cashflow' },
+  { label: 'AIチャット',       icon: MessageSquare,   href: '/chat' },
 ];
 
 const allNavItems = [
@@ -38,10 +46,12 @@ const allNavItems = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { toast } = useToast();
 
   const currentLabel =
-    allNavItems.find(({ href }) => pathname === href || pathname.startsWith(href + '/'))
-      ?.label ?? '';
+    allNavItems.find(({ href }) =>
+      pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/'))
+    )?.label ?? '';
 
   const NavLink = ({
     href,
@@ -52,7 +62,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     icon: React.ElementType;
     label: string;
   }) => {
-    const active = pathname === href || pathname.startsWith(href + '/');
+    const active =
+      pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/'));
     return (
       <Link
         href={href}
@@ -60,7 +71,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         className={`group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all duration-200 ${
           active
             ? 'bg-blue-50 text-blue-900 font-medium'
-            : 'text-slate-600 hover:bg-slate-50 hover:translate-x-1'
+            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
         }`}
       >
         {active && (
@@ -115,13 +126,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         <Separator className="mx-3 my-2" style={{ width: 'calc(100% - 24px)' }} />
 
-        {/* Settings */}
+        {/* Settings + version */}
         <div className="px-3 pb-1">
           <NavLink href="/settings" icon={Settings} label="ストア設定" />
         </div>
-
-        {/* Powered by AI */}
-        <p className="px-6 pb-4 text-xs text-slate-400">Powered by AI</p>
+        <p className="px-4 py-2 text-xs text-slate-400">EC Agent v0.1.0</p>
       </aside>
 
       {/* Main */}
@@ -144,14 +153,41 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="text-slate-500 hover:text-slate-700 transition-colors">
+            {/* Bell */}
+            <button
+              className="text-slate-500 hover:text-slate-700 transition-colors"
+              onClick={() => toast({ title: '通知機能は準備中です' })}
+            >
               <Bell size={20} />
             </button>
-            <Avatar className="h-9 w-9 bg-blue-100">
-              <AvatarFallback className="text-sm font-medium text-blue-900 bg-blue-100">
-                や
-              </AvatarFallback>
-            </Avatar>
+
+            <Separator orientation="vertical" className="h-6" />
+
+            {/* User dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors">
+                  <span>やすさん</span>
+                  <Avatar className="h-8 w-8 bg-blue-100">
+                    <AvatarFallback className="text-sm font-medium text-blue-900 bg-blue-100">
+                      や
+                    </AvatarFallback>
+                  </Avatar>
+                  <ChevronDown size={14} className="text-slate-400" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem onClick={() => toast({ title: '準備中です' })}>
+                  プロフィール
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast({ title: '準備中です' })}>
+                  設定
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast({ title: '準備中です' })}>
+                  ログアウト
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { CheckCircle2, Clock, Sparkles, Copy, Check, Loader2 } from 'lucide-react';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 import { AgentBriefCard } from '@/components/AgentBriefCard';
 import { PageSkeleton } from '@/components/PageSkeleton';
 import { Input } from '@/components/ui/input';
@@ -1029,15 +1029,10 @@ export default function BuildAgentPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* ── 1. Header ─────────────────────────────────────────── */}
-      <div className="flex items-start justify-between pb-4 border-b">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">構築AI</h1>
-          <p className="text-sm text-slate-500 mt-1">商品ページ生成・SEO最適化・多言語対応をAIが代行します</p>
-        </div>
-        <Link href="/dashboard" className="text-sm text-blue-900 hover:text-blue-700 transition-colors mt-1 shrink-0">
-          ← ダッシュボードに戻る
-        </Link>
-      </div>
+      <PageHeader
+        title="構築AI"
+        description="商品ページ生成・SEO最適化・多言語対応をAIが代行します"
+      />
 
       <AgentBriefCard category="build" />
 

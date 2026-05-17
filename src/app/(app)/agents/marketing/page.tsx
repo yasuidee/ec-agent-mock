@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { TrendingUp, Users, Wallet, Copy, Check, Sparkles, X as XIcon, Plus } from 'lucide-react';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 import { AgentBriefCard } from '@/components/AgentBriefCard';
 import { PageSkeleton } from '@/components/PageSkeleton';
 import {
@@ -461,20 +461,10 @@ export default function MarketingAgentPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* ── 1. Header ─────────────────────────────────────── */}
-      <div className="flex items-start justify-between pb-4 border-b">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">集客AI</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            広告配信・SNS投稿・メルマガをAIが最適化します
-          </p>
-        </div>
-        <Link
-          href="/dashboard"
-          className="text-sm text-blue-900 hover:text-blue-700 transition-colors mt-1 shrink-0"
-        >
-          ← ダッシュボードに戻る
-        </Link>
-      </div>
+      <PageHeader
+        title="集客AI"
+        description="広告配信・SNS投稿・メルマガをAIが最適化します"
+      />
 
       <AgentBriefCard category="marketing" />
 

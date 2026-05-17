@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { topProducts } from '@/lib/mock-data';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -333,31 +334,29 @@ export default function InventoryPage() {
   return (
     <div className="p-6 space-y-6">
       {/* ヘッダー */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">📦 在庫管理 AI</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            在庫切れ予測・発注推奨・滞留アラートをAIが自動分析
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {criticalCount > 0 && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-300">
-              🔴 危機的 {criticalCount}品目
-            </span>
-          )}
-          {urgentCount > 0 && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-300">
-              🟠 緊急 {urgentCount}品目
-            </span>
-          )}
-          {warningCount > 0 && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-300">
-              🟡 注意 {warningCount}品目
-            </span>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title="📦 在庫管理 AI"
+        description="在庫切れ予測・発注推奨・滞留アラートをAIが自動分析"
+        actions={
+          <div className="flex flex-wrap gap-2">
+            {criticalCount > 0 && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-300">
+                🔴 危機的 {criticalCount}品目
+              </span>
+            )}
+            {urgentCount > 0 && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-300">
+                🟠 緊急 {urgentCount}品目
+              </span>
+            )}
+            {warningCount > 0 && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-300">
+                🟡 注意 {warningCount}品目
+              </span>
+            )}
+          </div>
+        }
+      />
 
       {/* タブ */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

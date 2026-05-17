@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
 import {
   ComposedChart,
   Bar,
@@ -31,6 +30,7 @@ import {
   dailyPayouts,
   shopifyFeeConfig,
 } from '@/lib/mock-data';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 
 // ────────────────────────────────────────────────
 // ヘルパー
@@ -146,17 +146,10 @@ export default function CashflowPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
 
       {/* ── ヘッダー ─────────────────────────────────────── */}
-      <div className="flex items-start justify-between pb-4 border-b">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">入金・手数料管理</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Shopify入金スケジュール・手数料・6ヶ月キャッシュフロー予測
-          </p>
-        </div>
-        <Link href="/dashboard" className="text-sm text-blue-900 hover:text-blue-700 transition-colors mt-1 shrink-0">
-          ← ダッシュボードに戻る
-        </Link>
-      </div>
+      <PageHeader
+        title="入金・手数料管理"
+        description="Shopify入金スケジュール・手数料・6ヶ月キャッシュフロー予測"
+      />
 
       {/* ── セクション1: KPIカード ──────────────────────── */}
       <div className="grid grid-cols-4 gap-4">

@@ -515,3 +515,135 @@ export const trafficSources: TrafficSource[] = [
   { source: "Direct", sessions: 1_280, percentage: 12.8 },
   { source: "Email", sessions: 550, percentage: 5.5 },
 ];
+
+// ─── Customer support data ──────────────────────────────────────────────────
+
+export type Review = {
+  id: string
+  platform: 'shopify' | 'amazon' | 'rakuten' | 'google'
+  productName: string
+  rating: number
+  title: string
+  body: string
+  authorName: string
+  date: string
+  status: 'unreplied' | 'replied' | 'ignored'
+  reply?: string
+  sentiment: 'positive' | 'neutral' | 'negative'
+  tags: string[]
+}
+
+export const reviews: Review[] = [
+  {
+    id: 'r001', platform: 'shopify', productName: 'ヒノキカッティングボード', rating: 5,
+    title: '職人の技が伝わる一品',
+    body: 'ヒノキの香りが素晴らしく、使うたびに癒されます。厚みがあってしっかりしており、長く使えそうです。プレゼントにも最適でした。',
+    authorName: '田中 美咲', date: '2026-05-10', status: 'unreplied',
+    sentiment: 'positive', tags: ['品質', '香り', 'プレゼント']
+  },
+  {
+    id: 'r002', platform: 'amazon', productName: '有田焼マグカップ', rating: 2,
+    title: '説明と違う',
+    body: '商品ページでは電子レンジ対応と書いてありましたが、届いた商品には電子レンジ不可のシールが貼ってありました。返品対応を求めます。',
+    authorName: 'K.Yamamoto', date: '2026-05-12', status: 'unreplied',
+    sentiment: 'negative', tags: ['ページ説明', '品質', '返品']
+  },
+  {
+    id: 'r003', platform: 'shopify', productName: '南部鉄器急須', rating: 4,
+    title: '重厚感があって良いが梱包が心配',
+    body: '急須自体は非常に良い品物です。ただ、梱包がやや簡易的で、配送中に傷がつきそうで心配でした。商品は問題なかったですが改善を期待します。',
+    authorName: '佐藤 健一', date: '2026-05-11', status: 'unreplied',
+    sentiment: 'neutral', tags: ['品質', '梱包', '配送']
+  },
+  {
+    id: 'r004', platform: 'google', productName: '漆塗り箸セット', rating: 5,
+    title: '贈り物に大変喜ばれました',
+    body: '両親の結婚記念日に贈りました。箱も立派で、開けた瞬間に歓声が上がりました。職人さんの丁寧な仕事が伝わります。また利用します。',
+    authorName: '渡辺 由香', date: '2026-05-09', status: 'replied',
+    reply: 'ありがとうございます。大切な方へのプレゼントにお選びいただき、誠に光栄です。',
+    sentiment: 'positive', tags: ['プレゼント', '梱包', '品質']
+  },
+  {
+    id: 'r005', platform: 'rakuten', productName: '和紙ノート', rating: 1,
+    title: '配送が遅すぎる',
+    body: '注文から10日経っても届かず、問い合わせしてもなかなか返信がなかった。商品は良かったですが、対応に不満です。',
+    authorName: 'masa_rakuten', date: '2026-05-08', status: 'replied',
+    reply: 'この度はご不便をおかけし、誠に申し訳ございませんでした。',
+    sentiment: 'negative', tags: ['配送', '顧客対応']
+  },
+  {
+    id: 'r006', platform: 'shopify', productName: 'ヒノキカッティングボード', rating: 3,
+    title: '思ったより小さかった',
+    body: 'サイズ表記はありましたが、実物を見てイメージと違いました。写真だともっと大きく見えます。品質自体は良いです。',
+    authorName: '木村 翔', date: '2026-05-13', status: 'unreplied',
+    sentiment: 'neutral', tags: ['ページ説明', 'サイズ感']
+  },
+  {
+    id: 'r007', platform: 'amazon', productName: '南部鉄器急須', rating: 5,
+    title: '本格的な鉄瓶でお茶が美味しくなった',
+    body: '毎朝のお茶の時間が特別になりました。鉄分も補給できると聞いて購入しましたが、お茶の味が丸くなった気がします。一生ものの買い物をした感覚です。',
+    authorName: 'tea_lover_jp', date: '2026-05-07', status: 'unreplied',
+    sentiment: 'positive', tags: ['品質', '健康', 'リピート意向']
+  },
+  {
+    id: 'r008', platform: 'shopify', productName: '有田焼マグカップ', rating: 2,
+    title: '割れて届いた',
+    body: '箱を開けたら取っ手部分が割れていました。すぐに連絡しましたが、対応に数日かかりました。交換品は問題なかったです。',
+    authorName: '高橋 直子', date: '2026-05-06', status: 'replied',
+    reply: 'この度は大変申し訳ございませんでした。梱包を改善いたします。',
+    sentiment: 'negative', tags: ['梱包', '破損', '顧客対応']
+  },
+]
+
+export type Inquiry = {
+  id: string
+  platform: 'email' | 'shopify' | 'line' | 'instagram'
+  productName?: string
+  subject: string
+  body: string
+  customerName: string
+  date: string
+  status: 'unreplied' | 'replied' | 'pending'
+  reply?: string
+  category: 'shipping' | 'product' | 'return' | 'other'
+  priority: 'high' | 'medium' | 'low'
+}
+
+export const inquiries: Inquiry[] = [
+  {
+    id: 'i001', platform: 'email', productName: '有田焼マグカップ',
+    subject: '注文した商品がまだ届きません',
+    body: '5月10日に注文しましたが、まだ届いていません。追跡番号を教えていただけますか？注文番号は#10234です。',
+    customerName: '山田 花子', date: '2026-05-15', status: 'unreplied',
+    category: 'shipping', priority: 'high'
+  },
+  {
+    id: 'i002', platform: 'shopify', productName: 'ヒノキカッティングボード',
+    subject: 'サイズのカスタマイズは可能ですか？',
+    body: '贈り物用に名前を入れることはできますか？また、Lサイズはありますか？',
+    customerName: '鈴木 太郎', date: '2026-05-14', status: 'unreplied',
+    category: 'product', priority: 'medium'
+  },
+  {
+    id: 'i003', platform: 'line',
+    subject: '返品したいのですが',
+    body: 'イメージと違ったので返品したいです。まだ未使用です。返品方法を教えてください。',
+    customerName: 'LINE_user_293', date: '2026-05-13', status: 'unreplied',
+    category: 'return', priority: 'high'
+  },
+  {
+    id: 'i004', platform: 'instagram', productName: '漆塗り箸セット',
+    subject: '海外への発送は対応していますか？',
+    body: 'アメリカに住む友人へのプレゼントに購入したいのですが、海外発送は可能ですか？',
+    customerName: 'yuki_overseas', date: '2026-05-12', status: 'replied',
+    reply: '海外発送に対応しております。詳細はメールにてご案内いたします。',
+    category: 'shipping', priority: 'medium'
+  },
+  {
+    id: 'i005', platform: 'email', productName: '南部鉄器急須',
+    subject: 'お手入れ方法について',
+    body: '購入後のお手入れ方法がわかりません。錆びやすいと聞いたのですが、どうすれば長持ちしますか？',
+    customerName: '中村 恵子', date: '2026-05-11', status: 'unreplied',
+    category: 'product', priority: 'low'
+  },
+]

@@ -154,14 +154,14 @@ export default function CashflowPage() {
       {/* ── セクション1: KPIカード ──────────────────────── */}
       <div className="grid grid-cols-4 gap-4">
         {/* カード1: 今月の売上 */}
-        <div className="bg-white border rounded-xl p-5">
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
           <p className="text-xs text-slate-500 mb-1">今月の売上</p>
           <p className="text-2xl font-bold text-slate-900">{yen(thisMonth.shopifyRevenue)}</p>
           <p className="text-xs text-slate-500 mt-1">Shopify売上総額</p>
         </div>
 
         {/* カード2: 差し引き手数料 */}
-        <div className="bg-white border rounded-xl p-5">
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
           <p className="text-xs text-slate-500 mb-1">差し引き手数料</p>
           <p className="text-2xl font-bold text-red-600">
             {yen(thisMonth.shopifyFee + thisMonth.shopifyMonthlyFee)}
@@ -171,7 +171,7 @@ export default function CashflowPage() {
         </div>
 
         {/* カード3: 実際の入金額 */}
-        <div className="bg-white border rounded-xl p-5">
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
           <p className="text-xs text-slate-500 mb-1">実際の入金額</p>
           <p className="text-2xl font-bold text-blue-900">{yen(thisMonth.netIncome)}</p>
           <p className="text-xs text-slate-500 mt-1">入金予定日: {fmtDate(thisMonth.payoutDate)}</p>
@@ -181,7 +181,7 @@ export default function CashflowPage() {
         </div>
 
         {/* カード4: 今月の収支 */}
-        <div className="bg-white border rounded-xl p-5">
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
           <p className="text-xs text-slate-500 mb-1">今月の収支</p>
           <p className={`text-2xl font-bold ${thisMonth.netCashflow >= 0 ? 'text-green-600' : 'text-red-500'}`}>
             {thisMonth.netCashflow >= 0 ? '' : '▲'}{yen(thisMonth.netCashflow)}
@@ -199,7 +199,7 @@ export default function CashflowPage() {
 
       {/* ── セクション2: キャッシュ枯渇アラート ────────── */}
       {dangerMonths.length > 0 ? (
-        <div className="bg-red-50 border-2 border-red-400 rounded-xl p-5">
+        <div className="bg-red-50 border-2 border-red-400 rounded-xl p-5 mb-6">
           <div className="flex items-center gap-3">
             <span className="text-2xl">🚨</span>
             <span className="font-bold text-red-700 text-lg">キャッシュ枯渇リスクを検出しました</span>
@@ -233,7 +233,7 @@ export default function CashflowPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
           <p className="text-green-700 font-medium">✅ 今後6ヶ月のキャッシュフローは健全です</p>
           <p className="text-sm text-green-600 mt-1">
             最低残高: {yen(minCumulativeCash.val)}（{minCumulativeCash.label}）
@@ -242,7 +242,7 @@ export default function CashflowPage() {
       )}
 
       {/* ── セクション3: キャッシュフローグラフ ─────────── */}
-      <div className="bg-white border rounded-xl p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-slate-900">📈 6ヶ月キャッシュフロー予測</h2>
           <div className="flex items-center gap-4 text-xs text-slate-500">
@@ -308,7 +308,7 @@ export default function CashflowPage() {
       </div>
 
       {/* ── セクション4: 月次収支テーブル ──────────────── */}
-      <div className="bg-white border rounded-xl p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h2 className="font-semibold text-slate-900 mb-4">📊 月次収支明細</h2>
         <Tabs value={activeTab} onValueChange={v => setActiveTab(v as typeof activeTab)}>
           <TabsList className="mb-4">
@@ -429,7 +429,7 @@ export default function CashflowPage() {
       </div>
 
       {/* ── セクション5: 入金スケジュール ───────────────── */}
-      <div className="bg-white border rounded-xl p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center justify-between mb-1">
           <h2 className="font-semibold text-slate-900">📅 今月の入金スケジュール</h2>
           <span className="text-xs text-slate-500">注文から{shopifyFeeConfig.payoutDelayDays}営業日後に入金されます</span>
@@ -473,11 +473,11 @@ export default function CashflowPage() {
       </div>
 
       {/* ── セクション6: 手数料の内訳 ───────────────────── */}
-      <div className="bg-white border rounded-xl p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h2 className="font-semibold text-slate-900 mb-4">💳 Shopify手数料の内訳</h2>
 
         {/* プラン設定 */}
-        <div className="bg-slate-50 rounded-lg p-4 mb-4">
+        <div className="bg-slate-50 rounded-xl p-4 mb-4">
           <p className="font-medium text-slate-800">現在のプラン: {shopifyFeeConfig.planName}</p>
           <div className="grid grid-cols-3 gap-4 mt-3">
             <div className="text-center">
@@ -499,7 +499,7 @@ export default function CashflowPage() {
 
         {/* 手数料シミュレーション */}
         <div className="flex gap-6 items-start">
-          <div className="flex-1 border rounded-lg p-4">
+          <div className="flex-1 bg-slate-50 rounded-xl p-5">
             <p className="text-sm font-medium text-slate-800 mb-3">
               今月(¥5,000,000の売上)の手数料計算
             </p>
@@ -548,7 +548,7 @@ export default function CashflowPage() {
         </div>
 
         {/* 手数料削減ヒント */}
-        <div className="bg-amber-50 rounded-lg p-4 mt-4">
+        <div className="bg-amber-50 rounded-xl p-4 mt-4">
           <p className="text-sm font-semibold text-amber-800 mb-2">💡 手数料を抑えるには</p>
           <ul className="space-y-1.5 text-sm text-amber-900">
             <li>• Shopify Paymentsを使うと取引手数料(2.0%)が免除されます</li>
@@ -565,7 +565,7 @@ export default function CashflowPage() {
       </div>
 
       {/* ── セクション7: シミュレーター ─────────────────── */}
-      <div className="bg-white border rounded-xl p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h2 className="font-semibold text-slate-900">🔧 キャッシュフロー改善シミュレーター</h2>
         <p className="text-xs text-slate-500 mt-1 mb-5">数値を変えるとシミュレーション結果がリアルタイムで更新されます</p>
 
@@ -579,7 +579,7 @@ export default function CashflowPage() {
             <input
               type="range" min={-10} max={30} value={growthRate}
               onChange={e => setGrowthRate(Number(e.target.value))}
-              className="w-full accent-blue-900"
+              className="accent-blue-900 w-full"
             />
             <p className="text-xs text-slate-500 mt-1">毎月{growthRate > 0 ? '+' : ''}{growthRate}%成長した場合</p>
           </div>
@@ -593,7 +593,7 @@ export default function CashflowPage() {
             <input
               type="range" min={30} max={60} value={inventoryRate}
               onChange={e => setInventoryRate(Number(e.target.value))}
-              className="w-full accent-blue-900"
+              className="accent-blue-900 w-full"
             />
             <p className="text-xs text-slate-500 mt-1">売上の{inventoryRate}%を仕入に使う場合</p>
           </div>
@@ -607,7 +607,7 @@ export default function CashflowPage() {
             <input
               type="range" min={5} max={25} value={adRate}
               onChange={e => setAdRate(Number(e.target.value))}
-              className="w-full accent-blue-900"
+              className="accent-blue-900 w-full"
             />
             <p className="text-xs text-slate-500 mt-1">売上の{adRate}%を広告費に使う場合</p>
           </div>
@@ -621,7 +621,7 @@ export default function CashflowPage() {
             <input
               type="range" min={0} max={20_000_000} step={1_000_000} value={initialCash}
               onChange={e => setInitialCash(Number(e.target.value))}
-              className="w-full accent-blue-900"
+              className="accent-blue-900 w-full"
             />
             <p className="text-xs text-slate-500 mt-1">現在のキャッシュ残高: {yen(initialCash)}</p>
           </div>

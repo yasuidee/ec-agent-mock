@@ -4,7 +4,6 @@ import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Send, Bot } from 'lucide-react';
 import { PageHeader } from '@/components/dashboard/PageHeader';
-import { Input } from '@/components/ui/input';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -109,17 +108,17 @@ function ChatInner() {
   return (
     <div className="grid grid-cols-4 h-full -m-8 animate-in fade-in duration-300">
       {/* ── Left sidebar ──────────────────────────────────── */}
-      <aside className="col-span-1 bg-white border-r flex flex-col overflow-hidden">
-        <div className="px-4 py-4 border-b">
+      <aside className="col-span-1 bg-white border-r border-slate-200 flex flex-col overflow-hidden">
+        <div className="px-4 py-4 border-b border-slate-200">
           <h2 className="text-sm font-semibold text-slate-700">チャット履歴</h2>
         </div>
-        <ul className="flex-1 overflow-y-auto">
+        <ul className="flex-1 overflow-y-auto p-2 space-y-1">
           {HISTORY.map((q) => (
             <li key={q}>
               <button
                 onClick={() => sendMessage(q)}
                 disabled={loading}
-                className="w-full text-left border-b py-3 px-4 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                className="w-full text-left hover:bg-slate-50 rounded-lg px-3 py-3 text-sm text-slate-600 disabled:opacity-50 transition-colors cursor-pointer"
               >
                 {q}
               </button>
@@ -134,7 +133,7 @@ function ChatInner() {
         <div className="bg-white px-6 pt-6 shrink-0">
           <PageHeader
             title="AIチャット"
-            description="EC Agentが売上・在庫・広告をサポートします"
+            description="EC運営の悩みをAIに何でも相談できます"
           />
         </div>
 
@@ -151,10 +150,10 @@ function ChatInner() {
                 </div>
               )}
               <div
-                className={`max-w-[72%] rounded-lg px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
+                className={`text-sm leading-relaxed whitespace-pre-wrap ${
                   msg.role === 'user'
-                    ? 'bg-blue-900 text-white'
-                    : 'bg-white border text-slate-800'
+                    ? 'bg-blue-900 text-white rounded-2xl rounded-br-sm px-4 py-3 max-w-lg ml-auto'
+                    : 'bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-4 py-3 max-w-xl shadow-sm'
                 }`}
               >
                 {msg.content}
@@ -175,7 +174,7 @@ function ChatInner() {
               <div className="w-8 h-8 rounded-full bg-blue-900 flex items-center justify-center shrink-0 mb-0.5">
                 <Bot size={16} className="text-white" />
               </div>
-              <div className="bg-white border rounded-lg px-4 py-3">
+              <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
                 <span className="flex gap-1">
                   {[0, 1, 2].map((n) => (
                     <span
@@ -193,14 +192,14 @@ function ChatInner() {
         </div>
 
         {/* Input area */}
-        <div className="border-t p-4 bg-white">
+        <div className="bg-white border-t border-slate-200 p-4">
           <div className="flex gap-2 mb-3 flex-wrap">
             {QUICK_QUESTIONS.map((q) => (
               <button
                 key={q}
                 onClick={() => sendMessage(q)}
                 disabled={loading}
-                className="text-xs border border-slate-300 text-slate-600 rounded-md px-3 py-1.5 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                className="border border-slate-200 rounded-full text-xs text-slate-600 px-3 py-1.5 hover:bg-slate-50 hover:border-blue-200 disabled:opacity-50 transition-colors"
               >
                 {q}
               </button>
@@ -208,23 +207,20 @@ function ChatInner() {
           </div>
 
           <form onSubmit={handleSubmit} className="flex gap-2">
-            <Input
+            <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="質問を入力してください..."
               disabled={loading}
-              className="flex-1"
+              className="border border-slate-200 rounded-xl px-4 py-2.5 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={!input.trim() || loading}
-              className="flex items-center gap-1.5 bg-blue-900 text-white text-sm px-4 py-2 rounded-md hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0 min-w-[80px] justify-center"
+              className="bg-blue-900 text-white p-2.5 rounded-xl hover:bg-blue-950 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
             >
               {loading ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  考え中...
-                </>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin block" />
               ) : (
                 <Send size={16} />
               )}

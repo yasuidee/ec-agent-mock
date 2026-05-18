@@ -123,24 +123,24 @@ export default function SettingsPage() {
         <TabsContent value="shopify">
           <div className="space-y-6 mt-2">
             {/* Connection status */}
-            <div className="bg-white border rounded-xl p-6">
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
                 <p className="font-medium text-amber-700">⚠️ Shopifyが未接続です</p>
                 <div className="mt-3 space-y-1 text-sm text-amber-600">
                   <p>以下の手順でShopifyと連携できます:</p>
-                  <ol className="list-decimal list-inside space-y-1 mt-2">
-                    <li>Shopify Partnersでカスタムアプリを作成</li>
-                    <li>Admin API権限を設定（read_products, read_orders, read_inventory, write_inventory）</li>
-                    <li>アクセストークンを取得</li>
-                    <li>Vercelの環境変数に設定してリデプロイ</li>
-                  </ol>
+                  <div className="mt-2 space-y-2">
+                    <div className="bg-white rounded-xl p-3 border border-amber-100 mb-2 text-sm text-amber-700">Shopify Partnersでカスタムアプリを作成</div>
+                    <div className="bg-white rounded-xl p-3 border border-amber-100 mb-2 text-sm text-amber-700">Admin API権限を設定（read_products, read_orders, read_inventory, write_inventory）</div>
+                    <div className="bg-white rounded-xl p-3 border border-amber-100 mb-2 text-sm text-amber-700">アクセストークンを取得</div>
+                    <div className="bg-white rounded-xl p-3 border border-amber-100 mb-2 text-sm text-amber-700">Vercelの環境変数に設定してリデプロイ</div>
+                  </div>
                 </div>
               </div>
               <div className="mt-4">
                 <button
                   onClick={handleConnectionTest}
                   disabled={connectionLoading}
-                  className="bg-blue-900 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  className="bg-blue-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-950 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                 >
                   {connectionLoading ? (
                     <><span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />確認中...</>
@@ -153,9 +153,9 @@ export default function SettingsPage() {
             </div>
 
             {/* Sync settings */}
-            <div className="bg-white border rounded-xl p-6">
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
               <h2 className="font-semibold text-slate-900 mb-4">データ同期設定</h2>
-              <div className="bg-slate-50 rounded-lg p-4">
+              <div className="bg-slate-50 rounded-xl p-4">
                 <p className="text-sm font-medium text-slate-700">現在: モックデータを使用中</p>
                 <p className="text-xs text-slate-500 mt-1">実際のShopifyデータを使うには連携が必要です</p>
               </div>
@@ -189,7 +189,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Meta */}
-            <div className="bg-white border rounded-xl p-6">
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
               <div className="flex justify-between items-center">
                 <h2 className="font-semibold text-slate-900">Meta（Facebook/Instagram）広告</h2>
                 <span className="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded-full">未接続</span>
@@ -209,7 +209,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Google */}
-            <div className="bg-white border rounded-xl p-6">
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
               <div className="flex justify-between items-center">
                 <h2 className="font-semibold text-slate-900">Google広告</h2>
                 <span className="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded-full">未接続</span>
@@ -239,27 +239,27 @@ export default function SettingsPage() {
             </div>
 
             {/* Data type select */}
-            <div className="bg-white border rounded-xl p-6">
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
               <h2 className="font-semibold text-slate-900 mb-4">インポートするデータの種類</h2>
               <select
                 value={selectedType}
                 onChange={e => { setSelectedType(e.target.value); setFile(null); setPreviewData([]); }}
-                className="w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                className="w-full max-w-xs rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
               >
                 <option value="shopify_products">Shopify商品データ</option>
                 <option value="shopify_orders">Shopify注文データ</option>
                 <option value="meta_ads">Meta広告データ</option>
                 <option value="google_ads">Google広告データ</option>
               </select>
-              <div className="bg-slate-50 rounded-lg p-3 mt-3">
+              <div className="bg-slate-50 rounded-xl p-3 mt-3">
                 <p className="text-xs text-slate-600">{CSV_FORMATS[selectedType]}</p>
               </div>
             </div>
 
             {/* Upload area */}
-            <div className="bg-white border rounded-xl p-6">
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
               <h2 className="font-semibold text-slate-900 mb-4">ファイルをアップロード</h2>
-              <div className="relative border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-900 hover:bg-blue-50 transition-colors">
+              <div className="relative border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-colors">
                 <input
                   type="file"
                   accept=".csv"
@@ -273,7 +273,7 @@ export default function SettingsPage() {
               </div>
 
               {previewData.length > 0 && file && (
-                <div className="mt-4 bg-white border rounded-xl p-4">
+                <div className="mt-4 bg-white rounded-xl border border-slate-200 p-4">
                   <p className="text-sm font-medium text-slate-700 mb-3">プレビュー（{file.name}）</p>
                   <div className="overflow-x-auto">
                     <Table>
@@ -301,7 +301,7 @@ export default function SettingsPage() {
                   <button
                     onClick={handleImport}
                     disabled={isImporting}
-                    className="mt-4 bg-blue-900 text-white w-full py-3 rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                    className="mt-4 bg-blue-900 text-white w-full py-3 rounded-lg text-sm font-medium hover:bg-blue-950 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                   >
                     {isImporting ? (
                       <><span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />インポート中...</>
@@ -312,10 +312,10 @@ export default function SettingsPage() {
             </div>
 
             {/* Import history */}
-            <div className="bg-white border rounded-xl p-6">
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
               <h2 className="font-semibold text-slate-900 mb-4">インポート履歴</h2>
               {importHistory ? (
-                <div className="border rounded-lg p-4">
+                <div className="bg-white rounded-xl border border-slate-200 p-4">
                   <p className="font-medium text-sm text-slate-800">
                     {CSV_TYPE_LABELS[importHistory.type] ?? importHistory.type} - {importHistory.rowCount}件
                   </p>

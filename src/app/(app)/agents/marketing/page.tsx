@@ -545,16 +545,16 @@ export default function MarketingAgentPage() {
 
         <Tabs value={adTab} onValueChange={setAdTab}>
           <TabsList className="bg-white border border-slate-200 rounded-xl p-1 flex gap-1 h-auto w-full mb-6">
-            <TabsTrigger value="planning" className="flex items-center gap-2 px-4 py-3.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+            <TabsTrigger value="planning" className="flex items-center gap-2 px-4 py-4 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
               <Megaphone className="w-4 h-4" />広告プランニング
             </TabsTrigger>
-            <TabsTrigger value="improvement" className="flex items-center gap-2 px-4 py-3.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+            <TabsTrigger value="improvement" className="flex items-center gap-2 px-4 py-4 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
               <Target className="w-4 h-4" />広告改善提案
             </TabsTrigger>
-            <TabsTrigger value="budget" className="flex items-center gap-2 px-4 py-3.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+            <TabsTrigger value="budget" className="flex items-center gap-2 px-4 py-4 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
               <Wallet className="w-4 h-4" />予算判断
             </TabsTrigger>
-            <TabsTrigger value="stop" className="flex items-center gap-2 px-4 py-3.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+            <TabsTrigger value="stop" className="flex items-center gap-2 px-4 py-4 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
               <StopCircle className="w-4 h-4" />停止判断
             </TabsTrigger>
           </TabsList>

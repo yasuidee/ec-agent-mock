@@ -191,13 +191,17 @@ function PriceRangeBar({ min, max, median, current }: { min: number; max: number
         >
           ▼ 自社 ¥{current.toLocaleString()}
         </div>
-        <div className="h-4 rounded-full bg-gradient-to-r from-green-200 via-amber-200 to-red-200 relative">
+        <div className="h-2 rounded-full bg-slate-200 relative">
           <div
-            className="absolute top-0 bottom-0 w-0.5 bg-slate-600 rounded"
+            className="absolute top-0 h-full bg-blue-900 rounded-full"
+            style={{ width: `${currentPct}%` }}
+          />
+          <div
+            className="absolute top-0 bottom-0 w-0.5 bg-slate-500 rounded"
             style={{ left: `${medianPct}%` }}
           />
           <div
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 bg-blue-900 rounded-full border-2 border-white shadow-md"
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-blue-900 rounded-full border-2 border-white shadow-md"
             style={{ left: `${currentPct}%` }}
           />
         </div>
@@ -323,14 +327,14 @@ function CreateTab() {
           <label className="text-xs font-medium text-slate-600">商品の特徴・スペック</label>
           <textarea rows={3} placeholder="例: 岩手の伝統工芸。200年の歴史を持つ職人が手作業で仕上げた急須。容量200ml。"
             value={form.features} onChange={set('features')}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-900/30 resize-none"
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 resize-none"
           />
         </div>
         <div className="flex flex-col gap-1.5 col-span-2">
           <label className="text-xs font-medium text-slate-600">差別化ポイント</label>
           <textarea rows={2} placeholder="例: 鉄分補給・保温性・100年使える耐久性"
             value={form.differentiation} onChange={set('differentiation')}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-900/30 resize-none"
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 resize-none"
           />
         </div>
         <div className="flex flex-col gap-1.5 col-span-2">
@@ -338,20 +342,20 @@ function CreateTab() {
           <Input placeholder="例: 到着後7日以内の初期不良のみ対応" value={form.returnPolicy} onChange={set('returnPolicy')} />
         </div>
       </div>
-      <div className="border rounded-lg p-4 bg-slate-50">
+      <div className="border border-slate-200 rounded-xl p-5 bg-slate-50">
         <p className="text-xs font-semibold text-slate-700 mb-3">AI生成オプション</p>
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-slate-600">言語</label>
             <select value={form.language} onChange={set('language')}
-              className="w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30">
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 bg-white">
               <option>日本語</option><option>英語</option><option>中国語（簡体）</option>
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-slate-600">文体・トーン</label>
             <select value={form.tone} onChange={set('tone')}
-              className="w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30">
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 bg-white">
               <option>プロフェッショナル</option><option>親しみやすい</option><option>高級感・上品</option><option>カジュアル</option>
             </select>
           </div>
@@ -366,7 +370,7 @@ function CreateTab() {
         </div>
       </div>
       <button onClick={handleGenerate} disabled={!form.productName}
-        className="flex items-center gap-2 bg-blue-900 text-white text-sm px-6 py-2.5 rounded-md hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        className="flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-950 text-white font-medium text-sm w-full py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
         <Sparkles size={15} />AIで商品ページを生成する
       </button>
     </div>
@@ -389,7 +393,7 @@ function CreateTab() {
     <div className="space-y-4 animate-in fade-in duration-300">
       <div className="grid grid-cols-2 gap-3">
         {(Object.keys(CONTENT_LABELS) as (keyof typeof CONTENT_LABELS)[]).map((key) => (
-          <div key={key} className="border rounded-lg p-4 bg-white">
+          <div key={key} className="bg-slate-50 rounded-xl border border-slate-200 p-5">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold text-slate-600">{CONTENT_LABELS[key]}</p>
               <CopyButton text={generated[key]} />
@@ -397,7 +401,7 @@ function CreateTab() {
             <p className="text-sm text-slate-800 whitespace-pre-line leading-relaxed">{generated[key]}</p>
           </div>
         ))}
-        <div className="border rounded-lg p-4 bg-white">
+        <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-semibold text-slate-600">SEOキーワード</p>
             <CopyButton text={generated.seoKeywords.join(', ')} />
@@ -409,7 +413,7 @@ function CreateTab() {
           </div>
         </div>
       </div>
-      <div className="border rounded-lg p-4 bg-white">
+      <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-semibold text-slate-600">全文まとめ（編集可能）</p>
           <CopyButton text={combinedText} />
@@ -493,7 +497,7 @@ function ImproveTab() {
             <label className="text-xs font-medium text-slate-600">現在の商品ページ内容を貼り付け</label>
             <textarea rows={8} placeholder="タイトル・商品説明・スペック等を貼り付けてください..."
               value={currentContent} onChange={(e) => setCurrentContent(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-900/30 resize-none"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 resize-none"
             />
           </div>
           <div>
@@ -517,7 +521,7 @@ function ImproveTab() {
             </div>
           ) : (
             <button onClick={handleAnalyze} disabled={!currentContent}
-              className="flex items-center gap-2 bg-blue-900 text-white text-sm px-6 py-2.5 rounded-md hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              className="flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-950 text-white font-medium text-sm w-full py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               <Sparkles size={15} />AIで改善点を分析する
             </button>
           )}
@@ -559,12 +563,12 @@ function ImproveTab() {
           {!fullGenerated ? (
             <button onClick={() => { setGeneratingFull(true); setTimeout(() => { setGeneratingFull(false); setFullGenerated(true); }, 1500); }}
               disabled={generatingFull}
-              className="flex items-center gap-2 bg-blue-900 text-white text-sm px-6 py-2.5 rounded-md hover:bg-blue-800 disabled:opacity-50 transition-colors">
+              className="flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-950 text-white font-medium text-sm w-full py-3 rounded-lg disabled:opacity-50 transition-colors">
               {generatingFull ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
               {generatingFull ? '生成中...' : '改善版全文を生成する'}
             </button>
           ) : (
-            <div className="border rounded-lg p-4 bg-white animate-in fade-in duration-300">
+            <div className="bg-slate-50 rounded-xl border border-slate-200 p-5 animate-in fade-in duration-300">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-semibold text-slate-600">改善版全文</p>
                 <CopyButton text={result.fullPage} />
@@ -705,7 +709,7 @@ function PricingTab() {
       <div className="mb-6 flex flex-col gap-1.5">
         <label className="text-xs font-medium text-slate-600">既存商品から選ぶ</label>
         <select value={form.selectedProductId} onChange={(e) => handleProductSelect(e.target.value)}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30">
+          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 bg-white">
           <option value="">-- 商品を選択 --</option>
           {topProducts.map((p) => (
             <option key={p.id} value={p.id}>{p.name}（¥{p.price.toLocaleString()}）</option>
@@ -732,7 +736,7 @@ function PricingTab() {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-slate-600">カテゴリ</label>
             <select value={form.category} onChange={setField('category')}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30">
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 bg-white">
               <option value="">-- 選択 --</option>
               {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
             </select>
@@ -756,7 +760,7 @@ function PricingTab() {
             <label className="text-xs font-medium text-slate-600">商品の特徴・強み</label>
             <textarea rows={3} placeholder="例: 国産ヒノキ100%、職人手作り、抗菌作用あり"
               value={form.features} onChange={setField('features')}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-900/30 resize-none"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 resize-none"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -788,7 +792,7 @@ function PricingTab() {
       </div>
 
       <button onClick={handleAnalyze} disabled={!form.productName || isLoading}
-        className="flex items-center justify-center gap-2 bg-blue-900 text-white w-full py-3 mt-6 rounded-lg hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium">
+        className="flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-950 text-white font-medium w-full py-3 mt-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
         {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
         AI価格分析を実行する
       </button>
@@ -866,7 +870,7 @@ function PricingTab() {
               <p className="text-sm text-slate-500 mt-1">利益率 {analysisResult.recommendations.costBased.marginRate}%</p>
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">{analysisResult.recommendations.costBased.reason}</p>
               <button onClick={() => handleSelectPrice('costBased')}
-                className="border w-full py-2 mt-3 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                className="border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm w-full py-2 mt-3 rounded-lg transition-colors">
                 この価格を採用する
               </button>
             </div>
@@ -878,7 +882,7 @@ function PricingTab() {
               <p className="text-sm text-slate-500 mt-1">利益率 {analysisResult.recommendations.marketOptimal.marginRate}%</p>
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">{analysisResult.recommendations.marketOptimal.reason}</p>
               <button onClick={() => handleSelectPrice('marketOptimal')}
-                className="bg-blue-900 text-white w-full py-2 mt-3 rounded-lg text-sm hover:bg-blue-800 transition-colors">
+                className="bg-blue-900 hover:bg-blue-950 text-white font-medium text-sm w-full py-2 mt-3 rounded-lg transition-colors">
                 この価格を採用する
               </button>
             </div>
@@ -889,7 +893,7 @@ function PricingTab() {
               <p className="text-sm text-slate-500 mt-1">利益率 {analysisResult.recommendations.premium.marginRate}%</p>
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">{analysisResult.recommendations.premium.reason}</p>
               <button onClick={() => handleSelectPrice('premium')}
-                className="border w-full py-2 mt-3 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                className="border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm w-full py-2 mt-3 rounded-lg transition-colors">
                 この価格を採用する
               </button>
             </div>
@@ -918,7 +922,7 @@ function PricingTab() {
         </div>
 
         <button onClick={handleConfirmPrice}
-          className="flex items-center justify-center gap-2 bg-blue-900 text-white w-full py-3 rounded-lg hover:bg-blue-800 transition-colors font-medium">
+          className="flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-950 text-white font-medium w-full py-3 rounded-lg transition-colors">
           価格を確定してStep 3へ →
         </button>
       </div>
@@ -991,7 +995,7 @@ function PricingTab() {
             Shopifyに反映する（準備中）
           </button>
           <button onClick={copyPrice}
-            className="bg-blue-900 text-white w-full py-3 rounded-lg text-sm hover:bg-blue-800 transition-colors flex items-center justify-center gap-2">
+            className="bg-blue-900 hover:bg-blue-950 text-white font-medium text-sm w-full py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
             {priceCopied ? <Check size={14} /> : <Copy size={14} />}
             {priceCopied ? 'コピーしました ✓' : '価格をコピーする'}
           </button>
@@ -1031,7 +1035,7 @@ export default function BuildAgentPage() {
       {/* ── 1. Header ─────────────────────────────────────────── */}
       <PageHeader
         title="構築AI"
-        description="商品ページ生成・SEO最適化・多言語対応をAIが代行します"
+        description="商品ページ生成・SEO最適化・価格分析をAIが代行します"
       />
 
       <AgentBriefCard category="build" />
@@ -1053,7 +1057,7 @@ export default function BuildAgentPage() {
                 const cfg = urgencyConfig[s.urgency];
                 const isDone = done[s.id];
                 return (
-                  <div key={s.id} className={`flex items-center justify-between border rounded-lg p-4 transition-colors ${isDone ? 'bg-teal-50 border-teal-200' : 'bg-white'}`}>
+                  <div key={s.id} className={`flex items-center justify-between rounded-xl border p-5 transition-colors ${isDone ? 'bg-teal-50 border-teal-200' : 'bg-white border-slate-200 hover:border-blue-200'}`}>
                     <div className="flex items-center gap-3">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${cfg.className}`}>優先度{cfg.label}</span>
                       <span className={`text-sm ${isDone ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{s.title}</span>
@@ -1062,7 +1066,7 @@ export default function BuildAgentPage() {
                       <div className="flex items-center gap-1.5 text-teal-600 text-sm font-medium"><CheckCircle2 size={16} />完了</div>
                     ) : (
                       <button onClick={() => setDone((d) => ({ ...d, [s.id]: true }))}
-                        className="bg-blue-900 text-white text-xs px-4 py-1.5 rounded-md hover:bg-blue-800 transition-colors shrink-0">
+                        className="bg-blue-900 hover:bg-blue-950 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors shrink-0">
                         実行する
                       </button>
                     )}
@@ -1108,16 +1112,16 @@ export default function BuildAgentPage() {
           </TableHeader>
           <TableBody>
             {historyRows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow key={row.id} className="hover:bg-slate-50 transition-colors">
                 <TableCell className="text-xs text-slate-500 whitespace-nowrap">{row.datetime}</TableCell>
                 <TableCell className="text-sm text-slate-800">{row.action}</TableCell>
                 <TableCell>
                   {row.status === '完了' ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium text-teal-700 bg-teal-100 px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
                       <CheckCircle2 size={11} />完了
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
                       <Clock size={11} />処理中
                     </span>
                   )}

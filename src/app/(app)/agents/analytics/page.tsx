@@ -60,7 +60,7 @@ const insights = [
 const yen = (n: number) => '¥' + n.toLocaleString('ja-JP');
 
 const selectClass =
-  'w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30';
+  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300';
 
 type Period = '今週' | '今月' | '過去90日';
 
@@ -434,7 +434,7 @@ export default function AnalyticsAgentPage() {
       {/* ── 1. Header ─────────────────────────────────────── */}
       <PageHeader
         title="分析AI"
-        description="アクセス分析・顧客行動・経営PLをAIが可視化します"
+        description="売上分析・経営診断・目標達成プランをAIが可視化します"
       />
 
       <AgentBriefCard category="analytics" />
@@ -460,7 +460,7 @@ export default function AnalyticsAgentPage() {
       </Tabs>
 
       {/* ── 3. Purchase funnel ────────────────────────────── */}
-      <div className="bg-white border rounded-xl p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h2 className="font-semibold text-slate-900 mb-4">🔍 購買ファネル</h2>
         <div className="flex flex-col gap-1">
           {funnelSteps.map((step, i) => {
@@ -470,7 +470,7 @@ export default function AnalyticsAgentPage() {
                 : null;
             return (
               <div key={step.label}>
-                <div className="border rounded-lg p-4">
+                <div className="bg-white border border-slate-200 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-medium text-slate-400 w-4">{i + 1}</span>
@@ -504,7 +504,7 @@ export default function AnalyticsAgentPage() {
       </div>
 
       {/* ── 4. PL chart ───────────────────────────────────── */}
-      <div className="bg-white border rounded-xl p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h2 className="font-semibold text-slate-900 mb-4">💰 経営PL分析（過去30日）</h2>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={plData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -559,7 +559,7 @@ export default function AnalyticsAgentPage() {
 
       {/* ── 5. Customer segments ──────────────────────────── */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white border rounded-xl p-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h2 className="font-semibold text-slate-900 mb-2">顧客セグメント</h2>
           <div className="relative">
             <ResponsiveContainer width="100%" height={200}>
@@ -604,11 +604,11 @@ export default function AnalyticsAgentPage() {
           </ul>
         </div>
 
-        <div className="bg-white border rounded-xl p-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h2 className="font-semibold text-slate-900 mb-4">セグメント別指標</h2>
           <div className="flex flex-col gap-3">
             {segments.map((seg) => (
-              <div key={seg.name} className="border rounded-lg p-4">
+              <div key={seg.name} className="bg-white border border-slate-200 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span
                     className="w-2.5 h-2.5 rounded-sm shrink-0"
@@ -651,14 +651,14 @@ export default function AnalyticsAgentPage() {
       </div>
 
       {/* ── 8. Funnel Analysis ─────────────────────────────── */}
-      <div className="bg-white border rounded-xl p-6 mb-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
         <div className="mb-6">
           <h2 className="font-semibold text-lg text-slate-900">🔍 売上低迷 原因分解ファネル</h2>
           <p className="text-sm text-slate-500 mt-1">売上が伸びない原因をファネルで特定し、優先すべき改善ポイントを提案します</p>
         </div>
 
         {/* Input area */}
-        <div className="bg-slate-50 rounded-lg p-4 mb-6">
+        <div className="bg-slate-50 rounded-xl p-4 mb-6">
           <p className="text-sm font-medium text-slate-700 mb-3">現在の数値を入力してください</p>
           <div className="grid grid-cols-4 gap-4">
             {[
@@ -705,7 +705,7 @@ export default function AnalyticsAgentPage() {
             </select>
           </div>
           <button onClick={handleFunnelAnalyze} disabled={funnelLoading}
-            className="flex items-center justify-center gap-2 bg-blue-900 text-white w-full py-3 mt-4 rounded-lg hover:bg-blue-800 disabled:opacity-50 transition-colors font-medium">
+            className="flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-950 text-white w-full py-3 mt-4 rounded-lg disabled:opacity-50 transition-colors font-medium">
             {funnelLoading
               ? <><span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />分析中...</>
               : '🔍 ファネル分析を実行する'
@@ -756,7 +756,7 @@ export default function AnalyticsAgentPage() {
 
                   return (
                     <div key={stage.key}>
-                      <div className="border rounded-lg p-4">
+                      <div className={`bg-white border border-slate-200 border-l-4 rounded-xl p-4 mb-2 ${stage.health >= 80 ? 'border-l-green-400' : stage.health >= 50 ? 'border-l-amber-400' : 'border-l-red-400'}`}>
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-slate-400 w-4 font-medium">{i + 1}</span>
@@ -799,7 +799,7 @@ export default function AnalyticsAgentPage() {
                     {funnelResult.problems.map((p, i) => {
                       const cfg = PRIORITY_CONFIG[p.priority] ?? PRIORITY_CONFIG.medium;
                       return (
-                        <div key={i} className={`border-l-4 pl-4 py-3 pr-3 rounded-r-lg ${cfg.borderClass} ${cfg.bgClass}`}>
+                        <div key={i} className={`border-l-4 ${cfg.borderClass} ${cfg.bgClass} rounded-xl p-4 mb-3`}>
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-medium text-sm text-slate-900">{p.title}</span>
                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cfg.borderClass.replace('border-', 'bg-').replace('-400', '-100')} ${cfg.borderClass.replace('border-', 'text-').replace('-400', '-700')}`}>
@@ -846,7 +846,7 @@ export default function AnalyticsAgentPage() {
       <div className="space-y-6">
 
       {/* ── 9. Goal Planner ──────────────────────────────── */}
-      <div className="bg-white border rounded-xl p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="mb-6">
           <h2 className="font-semibold text-lg text-slate-900">🎯 目標達成プランナー</h2>
           <p className="text-sm text-slate-500 mt-1">現状と目標を入力すると、AIが達成までのアクションプランを提案します</p>
@@ -858,7 +858,7 @@ export default function AnalyticsAgentPage() {
             {/* Current data */}
             <div>
               <p className="text-sm font-medium text-slate-700 mb-3">現状の数値</p>
-              <div className="bg-slate-50 rounded-lg p-4">
+              <div className="bg-slate-50 rounded-xl p-4">
                 <div className="grid grid-cols-3 gap-4">
                   {[
                     { label: '今月の売上', k: 'revenue', ph: '1870000', unit: '円' },
@@ -895,7 +895,7 @@ export default function AnalyticsAgentPage() {
             {/* Target data */}
             <div>
               <p className="text-sm font-medium text-slate-700 mb-3 mt-6">目標の数値</p>
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-blue-50 rounded-xl border border-blue-200 p-4">
                 <div className="flex flex-col gap-1 mb-4">
                   <label className="text-xs font-medium text-slate-600">目標達成期間</label>
                   <select value={targetData.period} onChange={setTD('period')} className={selectClass} style={{maxWidth:200}}>
@@ -934,7 +934,7 @@ export default function AnalyticsAgentPage() {
             </div>
 
             <button onClick={handlePlanCreate} disabled={planLoading}
-              className="flex items-center justify-center gap-2 bg-blue-900 text-white w-full py-3 mt-6 rounded-lg hover:bg-blue-800 disabled:opacity-50 transition-colors font-medium">
+              className="flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-950 text-white w-full py-3 mt-6 rounded-lg disabled:opacity-50 transition-colors font-medium">
               {planLoading
                 ? <><span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />プラン作成中...</>
                 : 'AIにアクションプランを作成してもらう'
@@ -982,7 +982,7 @@ export default function AnalyticsAgentPage() {
                 <h4 className="font-semibold text-slate-800">{title}</h4>
               </div>
               {actions.map((a, i) => (
-                <div key={i} className={`rounded-lg p-4 mb-3 ${badgeBg}`}>
+                <div key={i} className={`rounded-xl p-4 mb-3 ${badgeBg}`}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium text-sm text-slate-900">{a.title}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${badgeBg.replace('bg-', 'bg-').replace('-50', '-100')} ${borderColor.replace('border-', 'text-').replace('-400', '-700')}`}>{badgeLabel}</span>
@@ -1004,7 +1004,7 @@ export default function AnalyticsAgentPage() {
           return (
             <div className="space-y-4 animate-in fade-in duration-300">
               {/* Gap summary */}
-              <div className="bg-white border rounded-xl p-6">
+              <div className="bg-white rounded-xl border border-slate-200 p-6">
                 <h3 className="font-semibold text-slate-900 mb-4">📊 現状と目標の差分</h3>
                 <div className="grid grid-cols-3 gap-4">
                   {[
@@ -1015,7 +1015,7 @@ export default function AnalyticsAgentPage() {
                     const gap = tgt - cur;
                     const rate = Math.round((cur / tgt) * 100);
                     return (
-                      <div key={label} className="border rounded-lg p-4 text-center">
+                      <div key={label} className="bg-white border border-slate-200 rounded-xl p-4 text-center">
                         <p className="text-xs text-slate-500 mb-2">{label}</p>
                         <p className="text-sm text-slate-400 line-through">{unit === '¥' ? yen(cur) : cur.toLocaleString() + '件'}</p>
                         <div className="text-lg font-bold text-blue-900 my-1">↑ {unit === '¥' ? yen(tgt) : tgt.toLocaleString() + '件'}</div>
@@ -1060,7 +1060,7 @@ export default function AnalyticsAgentPage() {
               </div>
 
               {/* Action plan */}
-              <div className="bg-white border rounded-xl p-6">
+              <div className="bg-white rounded-xl border border-slate-200 p-6">
                 <h3 className="font-semibold text-slate-900 mb-4">🚀 AIが提案するアクションプラン</h3>
                 {renderActionSection('即実行（今週中）', planResult.actions.immediate, 'border-red-400', '緊急', 'bg-red-50')}
                 {renderActionSection('短期実行（1ヶ月以内）', planResult.actions.shortTerm, 'border-amber-400', '短期', 'bg-amber-50')}
@@ -1068,7 +1068,7 @@ export default function AnalyticsAgentPage() {
               </div>
 
               {/* Simulation chart */}
-              <div className="bg-white border rounded-xl p-6">
+              <div className="bg-white rounded-xl border border-slate-200 p-6">
                 <h3 className="font-semibold text-slate-900 mb-4">📈 アクション実施後の予測</h3>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
@@ -1121,14 +1121,14 @@ export default function AnalyticsAgentPage() {
               </div>
 
               {/* AI comment */}
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-                <h3 className="font-semibold text-slate-900 mb-2">🤖 AIからのメッセージ</h3>
-                <p className="text-sm text-slate-700 leading-relaxed">{planResult.aiComment}</p>
-                <p className="text-xs text-blue-600 mt-3 font-medium">実現可能性スコア: {planResult.feasibilityScore}/100</p>
+              <div className="bg-blue-900 rounded-xl p-6 text-white">
+                <h3 className="font-bold text-lg mb-2">🤖 AIからのメッセージ</h3>
+                <p className="text-blue-100 text-sm leading-relaxed">{planResult.aiComment}</p>
+                <p className="text-xs text-blue-300 mt-3 font-medium">実現可能性スコア: {planResult.feasibilityScore}/100</p>
               </div>
 
               <button onClick={() => setPlannerStep(3)}
-                className="bg-blue-900 text-white w-full py-3 rounded-lg hover:bg-blue-800 transition-colors font-medium">
+                className="bg-blue-900 hover:bg-blue-950 text-white w-full py-3 rounded-lg transition-colors font-medium">
                 Step 3: 週次タスクに落とし込む →
               </button>
             </div>
@@ -1163,7 +1163,7 @@ export default function AnalyticsAgentPage() {
           return (
             <div className="space-y-4 animate-in fade-in duration-300">
               {/* Progress header */}
-              <div className="bg-blue-900 text-white rounded-xl p-4">
+              <div className="bg-blue-900 text-white rounded-xl p-4 mb-6">
                 <p className="font-medium">全体進捗: {completedTasks}/{totalTasks}タスク完了</p>
                 <p className="text-xs text-blue-200 mt-0.5">
                   目標達成まで残り約{({ '1ヶ月後': 30, '3ヶ月後': 90, '6ヶ月後': 180, '1年後': 365 }[targetData.period] ?? 90) - completedTasks * 3}日
@@ -1181,7 +1181,7 @@ export default function AnalyticsAgentPage() {
                   const weekCompleted = weekTasks.filter(t => checkedTasks[`${week.week}-${t.title}`]).length;
                   const weekRate = weekTasks.length > 0 ? Math.round((weekCompleted / weekTasks.length) * 100) : 0;
                   return (
-                    <div key={week.week} className="border rounded-lg p-4">
+                    <div key={week.week} className="bg-white border border-slate-200 rounded-xl p-4 mb-3">
                       <div className="flex items-center justify-between mb-3">
                         <div>
                           <span className="font-semibold text-slate-800">Week {week.week}</span>
@@ -1240,7 +1240,7 @@ export default function AnalyticsAgentPage() {
       </div>
 
       {/* ── 7. Profit Simulator ───────────────────────────── */}
-      <div className="bg-white border rounded-xl p-6 space-y-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-6">
         {/* Header */}
         <div>
           <h2 className="font-semibold text-lg text-slate-900">💰 利益シミュレーター</h2>
@@ -1261,7 +1261,7 @@ export default function AnalyticsAgentPage() {
             ))}
           </select>
           {selectedProduct && (
-            <div className="bg-slate-50 rounded-lg p-4 grid grid-cols-2 gap-4">
+            <div className="bg-slate-50 rounded-xl p-4 grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-slate-500">販売価格（Shopifyから取得）</p>
                 <p className="text-lg font-semibold text-slate-900 mt-0.5">
@@ -1333,7 +1333,7 @@ export default function AnalyticsAgentPage() {
         {sim && selectedProduct && (
           <div className="grid grid-cols-2 gap-4">
             {/* Card 1: Profit per unit */}
-            <div className="border rounded-xl p-5 space-y-3">
+            <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-3">
               <p className="text-xs font-medium text-slate-500">1個売れたらいくら残るか</p>
               <p className={`text-3xl font-bold ${sim.profitPerUnit >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                 ¥{Math.round(sim.profitPerUnit).toLocaleString()}
@@ -1377,7 +1377,7 @@ export default function AnalyticsAgentPage() {
             </div>
 
             {/* Card 2: Break-even */}
-            <div className="border rounded-xl p-5 space-y-3">
+            <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-3">
               <p className="text-xs font-medium text-slate-500">何個売れば黒字か</p>
               {sim.profitPerUnit > 0 ? (
                 <p className="text-sm font-semibold text-green-600">✅ 1個から黒字です</p>
@@ -1417,7 +1417,7 @@ export default function AnalyticsAgentPage() {
             </div>
 
             {/* Card 3: Max ad cost */}
-            <div className="border rounded-xl p-5 space-y-3">
+            <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-3">
               <p className="text-xs font-medium text-slate-500">広告費はいくらまで使えるか</p>
               <p className="text-3xl font-bold text-slate-900">
                 ¥{Math.max(0, Math.round(sim.maxAdCost)).toLocaleString()}
@@ -1438,7 +1438,7 @@ export default function AnalyticsAgentPage() {
             </div>
 
             {/* Card 4: Free shipping tolerance */}
-            <div className="border rounded-xl p-5 space-y-3">
+            <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-3">
               <p className="text-xs font-medium text-slate-500">送料無料にしても耐えられるか</p>
               {sim.canAbsorbShipping ? (
                 <>
@@ -1494,7 +1494,7 @@ export default function AnalyticsAgentPage() {
       <div className="space-y-6">
 
       {/* ── 週次レポート ──────────────────────────────────── */}
-      <div className="bg-white border rounded-xl p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-5">
           <div>
@@ -1510,7 +1510,7 @@ export default function AnalyticsAgentPage() {
             <button
               onClick={handleGenerateReport}
               disabled={reportLoading}
-              className="border text-sm px-4 py-2 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+              className="border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
             >
               {reportLoading && (
                 <span className="inline-block h-3.5 w-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
@@ -1676,7 +1676,7 @@ export default function AnalyticsAgentPage() {
                           </p>
                           <div className="space-y-3">
                             {r.nextWeekTasks.map((task) => (
-                              <div key={task.id} className="bg-white border rounded-lg p-4">
+                              <div key={task.id} className="bg-white border border-slate-200 rounded-xl p-4">
                                 <div className="flex justify-between items-start">
                                   <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${priorityBadge[task.priority] ?? 'bg-slate-100 text-slate-600'}`}>
                                     {priorityLabel[task.priority] ?? '通常'}

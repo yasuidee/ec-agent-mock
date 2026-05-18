@@ -743,9 +743,7 @@ export default function InventoryPage() {
               )}
             </div>
           )}
-        </TabsContent>
-
-        {/* ── Shopify在庫連携 ──────────────────────────── */}
+          {/* ── Shopify在庫連携 ──────────────────────────── */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mt-6">
           <h3 className="font-semibold text-blue-900">🔄 Shopifyに在庫数を反映する</h3>
           <p className="text-sm text-blue-600 mt-1">発注が完了したら、Shopifyの在庫数を更新してください。</p>
@@ -843,6 +841,7 @@ export default function InventoryPage() {
             </>
           )}
         </div>
+        </TabsContent>
 
         {/* ══════════════════════════════════════════════
             TAB 3: 滞留在庫アラート

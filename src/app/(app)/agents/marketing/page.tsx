@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { TrendingUp, Users, Wallet, Copy, Check, Sparkles, X as XIcon, Plus } from 'lucide-react';
+import { TrendingUp, Users, Wallet, Copy, Check, X as XIcon, Plus } from 'lucide-react';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { AgentBriefCard } from '@/components/AgentBriefCard';
 import { PageSkeleton } from '@/components/PageSkeleton';
@@ -28,11 +28,9 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { topProducts, type Product } from '@/lib/mock-data';
+import { topProducts } from '@/lib/mock-data';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-
-type Platform = 'Instagram' | 'X' | 'Facebook';
 
 interface HistoryRow {
   id: string;
@@ -77,26 +75,6 @@ interface AdStopResult {
   summary: { continueCount: number; improveCount: number; stopCount: number };
 }
 
-interface PageImprovement {
-  category: 'photo' | 'text' | 'price' | 'shipping' | 'faq';
-  content: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-}
-
-interface PageResult {
-  pageName: string;
-  cvr: number;
-  benchmark: number;
-  priority: 'urgent' | 'high' | 'normal';
-  additionalOrders: number;
-  revenueImpact: number;
-  improvements: PageImprovement[];
-}
-
-interface PageImprovementResult {
-  results: PageResult[];
-}
-
 interface AdRow {
   id: string;
   adName: string;
@@ -106,12 +84,79 @@ interface AdRow {
   conversions: string;
 }
 
-interface PageRow {
+interface AdPlanForm {
+  objective: string;
+  platforms: string[];
+  budget: string;
+  productName: string;
+  targetAudience: string;
+  targetKpi: string;
+  campaignPeriod: string;
+}
+
+interface MetaPlan {
+  objective: string;
+  dailyBudget: number;
+  targetAge: string;
+  targetGender: string;
+  targetLocation: string;
+  interests: string[];
+  adType: string;
+  mainCopy: string;
+  headline: string;
+  cta: string;
+}
+
+interface GooglePlan {
+  campaignType: string;
+  dailyBudget: number;
+  biddingStrategy: string;
+  keywords: string[];
+  negativeKeywords: string[];
+  matchType: string;
+  headline1: string;
+  headline2: string;
+  description: string;
+}
+
+interface AdPlanResult {
+  metaPlan: MetaPlan;
+  googlePlan: GooglePlan;
+  forecast: {
+    monthlyImpressions: number;
+    monthlyClicks: number;
+    expectedRoas: number;
+    expectedOrders: number;
+  };
+}
+
+interface ImprovementCampaign {
+  name: string;
+  status: 'good' | 'improve' | 'stop';
+  currentRoas: number;
+  improvements: {
+    targeting: string;
+    budget: { current: number; recommended: number; reason: string };
+    creative: string;
+    keywords: { add: string[]; remove: string[] };
+  };
+  expectedRoasAfter: number;
+  lossAmount: number;
+}
+
+interface ImprovementResult {
+  campaigns: ImprovementCampaign[];
+}
+
+interface ImproveCampaignRow {
   id: string;
-  pageName: string;
+  name: string;
+  spend: string;
   clicks: string;
   purchases: string;
-  bounceRate: string;
+  roas: string;
+  platform: 'meta' | 'google';
+  cvr: string;
 }
 
 // ─── Static data ─────────────────────────────────────────────────────────────
@@ -130,8 +175,6 @@ const budgetData = [
   { name: '漆塗り箸',                 budget: 3000  },
 ];
 
-const products = budgetData.map((d) => d.name);
-
 const historyRows: HistoryRow[] = [
   { id: 'h1', datetime: '2026-05-15 10:30', action: 'ヒノキカッティングボード Instagram広告配信',    channel: 'Instagram', result: 'CVR +15%'      },
   { id: 'h2', datetime: '2026-05-14 09:15', action: '南部鉄器急須 Google ショッピング最適化',         channel: 'Google',    result: 'ROAS 4.2倍'   },
@@ -139,63 +182,6 @@ const historyRows: HistoryRow[] = [
   { id: 'h4', datetime: '2026-05-13 11:20', action: '全商品 メルマガ配信（リピーター向け）',            channel: 'メール',    result: '開封率 32%'   },
   { id: 'h5', datetime: '2026-05-12 16:45', action: '和紙ノート Facebook 類似オーディエンス拡張',      channel: 'Facebook',  result: '新規 +9人'    },
 ];
-
-const MOCK_POST: Record<Platform, (product: string) => string> = {
-  Instagram: (p) =>
-    `✨ 職人の技が宿る一品をご紹介 ✨\n\n「${p}」は、熟練の職人が一つひとつ丁寧に仕上げた日本製の逸品です。\n日常使いから特別な贈り物まで、幅広くお使いいただけます。\n\n🛒 プロフィールリンクから詳細をチェック👆\n\n#日本製 #職人手作り #${p.replace(/\s/g, '')} #和雑貨 #ギフト`,
-  X: (p) =>
-    `【新着】${p} が入荷しました🎉\n\n職人が手作業で仕上げた日本製の逸品。耐久性・デザイン性ともに抜群です。\n数量限定なのでお早めに👇\n\n#${p.replace(/\s/g, '')} #日本製 #職人`,
-  Facebook: (p) =>
-    `📦 ${p} のご紹介\n\n日本の伝統工芸に根ざした職人技が光る一品です。素材の質感と独自の製法にこだわり、日常をちょっと豊かにしてくれます。\n\nご注文・詳細はプロフィールのリンクから。お気軽にメッセージもどうぞ 😊\n\n#日本製 #伝統工芸 #${p.replace(/\s/g, '')} #ハンドメイド #暮らしの道具`,
-};
-
-// ─── Score helpers (Tab 3) ────────────────────────────────────────────────────
-
-const avgWeeklySales =
-  topProducts.reduce((s, p) => s + p.weeklySales, 0) / topProducts.length;
-
-function calcAdScore(p: Product): number {
-  let score = 0;
-  if (p.marginRate >= 40) score += 30;
-  else if (p.marginRate >= 20) score += 15;
-  else score -= 20;
-
-  if (p.stockDays >= 30) score += 25;
-  else if (p.stockDays >= 14) score += 10;
-  else score -= 30;
-
-  if (p.weeklySales >= avgWeeklySales) score += 25;
-
-  return Math.max(0, Math.min(100, score));
-}
-
-function calcRecommendedBudget(score: number): number {
-  if (score >= 80) return 25000;
-  if (score >= 50) return 15000;
-  if (score >= 30) return 8000;
-  return 0;
-}
-
-function getQuadrant(p: Product): 'topRight' | 'topLeft' | 'bottomRight' | 'bottomLeft' {
-  const highMargin = p.marginRate >= 40;
-  const sufficientStock = p.stockDays >= 30;
-  if (highMargin && sufficientStock) return 'topRight';
-  if (highMargin && !sufficientStock) return 'topLeft';
-  if (!highMargin && sufficientStock) return 'bottomRight';
-  return 'bottomLeft';
-}
-
-function getVerdictInfo(score: number) {
-  if (score >= 80) return { label: '今すぐ出稿', icon: '🟢', color: 'bg-green-100 text-green-800' };
-  if (score >= 50) return { label: '条件付きで出稿', icon: '🟡', color: 'bg-amber-100 text-amber-800' };
-  return { label: '出稿しない', icon: '🔴', color: 'bg-red-100 text-red-800' };
-}
-
-function getScoreRingColor(score: number) {
-  if (score >= 80) return 'border-green-500';
-  if (score >= 50) return 'border-amber-400';
-  return 'border-red-400';
-}
 
 // ─── Misc helpers ─────────────────────────────────────────────────────────────
 
@@ -210,33 +196,6 @@ function judgmentColor(j: Judgment) {
   if (j === 'warning') return 'text-amber-600';
   return 'text-red-500';
 }
-
-const categoryIcon: Record<PageImprovement['category'], string> = {
-  photo: '📸',
-  text: '📝',
-  price: '💰',
-  shipping: '🚚',
-  faq: '❓',
-};
-
-const difficultyBadge: Record<PageImprovement['difficulty'], string> = {
-  easy: 'bg-green-100 text-green-700',
-  medium: 'bg-amber-100 text-amber-700',
-  hard: 'bg-red-100 text-red-700',
-};
-
-const difficultyLabel: Record<PageImprovement['difficulty'], string> = {
-  easy: '簡単',
-  medium: '普通',
-  hard: '難しい',
-};
-
-const benchmarkMap: Record<string, { label: string; rate: number }> = {
-  craft: { label: 'クラフト・伝統工芸（平均2.1%）', rate: 2.1 },
-  food: { label: '食品・飲料（平均3.2%）', rate: 3.2 },
-  fashion: { label: 'ファッション（平均1.8%）', rate: 1.8 },
-  other: { label: 'その他（平均2.5%）', rate: 2.5 },
-};
 
 const PIE_COLORS = ['#22c55e', '#f59e0b', '#ef4444'];
 
@@ -261,16 +220,11 @@ export default function MarketingAgentPage() {
 
   // ── Existing state ──────────────────────────────────────────────────────────
   const [budgetExecuted, setBudgetExecuted] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(products[0]);
-  const [platform, setPlatform] = useState<Platform>('Instagram');
-  const [post, setPost] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const [snsCopied, setSnsCopied] = useState(false);
 
   // ── Ad assistant state ──────────────────────────────────────────────────────
-  const [adTab, setAdTab] = useState('budget');
+  const [adTab, setAdTab] = useState('planning');
 
-  // Tab 1: Budget Judge
+  // Tab budget: Budget Judge
   const [t1Spend, setT1Spend] = useState('480000');
   const [t1Revenue, setT1Revenue] = useState('1824000');
   const [t1TargetRoas, setT1TargetRoas] = useState('3.0');
@@ -292,47 +246,49 @@ export default function MarketingAgentPage() {
     return (rev / spend).toFixed(2);
   }, [t1Spend, t1Revenue]);
 
-  // Tab 2: Ad Stop Judge
+  // Tab stop: Ad Stop Judge
   const [adRows, setAdRows] = useState<AdRow[]>(initialAdRows);
   const [t2Loading, setT2Loading] = useState(false);
   const [t2Error, setT2Error] = useState(false);
   const [t2Result, setT2Result] = useState<AdStopResult | null>(null);
 
-  // Tab 3: Product to advertise (frontend only)
-  const [modalProduct, setModalProduct] = useState<Product | null>(null);
+  // Planning tab
+  const [planForm, setPlanForm] = useState<AdPlanForm>({
+    objective: '売上を増やしたい',
+    platforms: [],
+    budget: '100000',
+    productName: topProducts[0]?.name ?? '',
+    targetAudience: '',
+    targetKpi: 'ROAS 3倍以上',
+    campaignPeriod: '1ヶ月',
+  });
+  const [planResult, setPlanResult] = useState<AdPlanResult | null>(null);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [metaChecks, setMetaChecks] = useState<Record<string, boolean>>({});
+  const [googleChecks, setGoogleChecks] = useState<Record<string, boolean>>({});
+  const [planCopied, setPlanCopied] = useState(false);
 
-  // Tab 4: Page Improvement
-  const [pageRows, setPageRows] = useState<PageRow[]>([
-    { id: '1', pageName: 'ヒノキカッティングボード', clicks: '2400', purchases: '42', bounceRate: '68' },
-    { id: '2', pageName: '有田焼マグカップ',          clicks: '800',  purchases: '12', bounceRate: '72' },
-  ]);
-  const [t4Benchmark, setT4Benchmark] = useState('craft');
-  const [t4Loading, setT4Loading] = useState(false);
-  const [t4Error, setT4Error] = useState(false);
-  const [t4Result, setT4Result] = useState<PageImprovementResult | null>(null);
+  // Improvement tab
+  const initialImproveMeta: ImproveCampaignRow[] = [
+    { id: 'im1', name: 'ヒノキボード_春の特集', spend: '120000', clicks: '2400', purchases: '42', roas: '', cvr: '', platform: 'meta' },
+    { id: 'im2', name: '有田焼_新商品告知', spend: '80000', clicks: '800', purchases: '8', roas: '', cvr: '', platform: 'meta' },
+  ];
+  const initialImproveGoogle: ImproveCampaignRow[] = [];
+  const [improveMetaRows, setImproveMetaRows] = useState<ImproveCampaignRow[]>(initialImproveMeta);
+  const [improveGoogleRows, setImproveGoogleRows] = useState<ImproveCampaignRow[]>(initialImproveGoogle);
+  const [improveTargetRoas, setImproveTargetRoas] = useState('3.0');
+  const [improveTargetCpa, setImproveTargetCpa] = useState('3000');
+  const [improveBudgetCap, setImproveBudgetCap] = useState('500000');
+  const [improvementResult, setImprovementResult] = useState<ImprovementResult | null>(null);
+  const [improvementLoading, setImprovementLoading] = useState(false);
+  const [improveChecks, setImproveChecks] = useState<Record<string, boolean>>({});
+  const [improveAdPlatformTab, setImproveAdPlatformTab] = useState('meta');
 
   if (!ready) return <PageSkeleton />;
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
-  const handleGenerate = () => {
-    setGenerating(true);
-    setPost(null);
-    setSnsCopied(false);
-    setTimeout(() => {
-      setPost(MOCK_POST[platform](selectedProduct));
-      setGenerating(false);
-    }, 800);
-  };
-
-  const handleSnsCopy = () => {
-    if (!post) return;
-    navigator.clipboard.writeText(post);
-    setSnsCopied(true);
-    setTimeout(() => setSnsCopied(false), 2000);
-  };
-
-  // Tab 1
+  // Tab budget
   const handleBudgetJudge = async () => {
     setT1Loading(true);
     setT1Result(null);
@@ -375,7 +331,7 @@ export default function MarketingAgentPage() {
     setTimeout(() => setT1Toast(false), 3000);
   };
 
-  // Tab 2
+  // Tab stop
   const addAdRow = () => {
     if (adRows.length >= 10) return;
     setAdRows((prev) => [
@@ -412,58 +368,92 @@ export default function MarketingAgentPage() {
     }
   };
 
-  // Tab 4
-  const addPageRow = () => {
-    if (pageRows.length >= 5) return;
-    setPageRows((prev) => [
-      ...prev,
-      { id: Date.now().toString(), pageName: '', clicks: '', purchases: '', bounceRate: '' },
-    ]);
-  };
-
-  const removePageRow = (id: string) => {
-    setPageRows((prev) => prev.filter((r) => r.id !== id));
-  };
-
-  const updatePageRow = (id: string, field: keyof PageRow, value: string) => {
-    setPageRows((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
-  };
-
-  const handlePageImprovement = async () => {
-    setT4Loading(true);
-    setT4Result(null);
-    setT4Error(false);
+  const handlePlanCreate = async () => {
+    setPlanLoading(true);
+    setPlanResult(null);
     try {
-      const res = await fetch('/api/page-improvement', {
+      const res = await fetch('/api/ad-planning', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pages: pageRows,
-          benchmarkRate: benchmarkMap[t4Benchmark].rate,
+          objective: planForm.objective,
+          platforms: planForm.platforms,
+          budget: Number(planForm.budget),
+          productName: planForm.productName,
+          targetAudience: planForm.targetAudience,
+          targetKpi: planForm.targetKpi,
         }),
       });
-      const data = await res.json();
-      setT4Result(data);
+      setPlanResult(await res.json());
     } catch {
-      setT4Result(null);
-      setT4Error(true);
+      setPlanResult(null);
     } finally {
-      setT4Loading(false);
+      setPlanLoading(false);
     }
   };
 
-  // Tab 3 computed
-  const sortedProducts = [...topProducts].sort((a, b) => calcAdScore(b) - calcAdScore(a));
-  const topProduct = sortedProducts[0];
-  const topScore = calcAdScore(topProduct);
-
-  const quadrantMap: Record<string, Product[]> = {
-    topRight: [],
-    topLeft: [],
-    bottomRight: [],
-    bottomLeft: [],
+  const handlePlanCopy = () => {
+    if (!planResult) return;
+    const text = JSON.stringify(planResult, null, 2);
+    navigator.clipboard.writeText(text);
+    setPlanCopied(true);
+    setTimeout(() => setPlanCopied(false), 2000);
   };
-  topProducts.forEach((p) => quadrantMap[getQuadrant(p)].push(p));
+
+  const addImproveRow = (platform: 'meta' | 'google') => {
+    const newRow: ImproveCampaignRow = {
+      id: Date.now().toString(), name: '', spend: '', clicks: '',
+      purchases: '', roas: '', cvr: '', platform,
+    };
+    if (platform === 'meta') setImproveMetaRows(prev => [...prev, newRow]);
+    else setImproveGoogleRows(prev => [...prev, newRow]);
+  };
+
+  const removeImproveRow = (id: string, platform: 'meta' | 'google') => {
+    if (platform === 'meta') setImproveMetaRows(prev => prev.filter(r => r.id !== id));
+    else setImproveGoogleRows(prev => prev.filter(r => r.id !== id));
+  };
+
+  const updateImproveRow = (id: string, field: keyof ImproveCampaignRow, value: string, platform: 'meta' | 'google') => {
+    if (platform === 'meta') setImproveMetaRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
+    else setImproveGoogleRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
+  };
+
+  const handleImprovementAnalyze = async () => {
+    setImprovementLoading(true);
+    setImprovementResult(null);
+    const avgOrderValue = 5500;
+    const campaigns = [
+      ...improveMetaRows.map(r => ({
+        name: r.name,
+        spend: Number(r.spend),
+        clicks: Number(r.clicks),
+        purchases: Number(r.purchases),
+        roas: r.purchases && r.spend ? Number(r.purchases) * avgOrderValue / Number(r.spend) : 0,
+        platform: 'meta',
+      })),
+      ...improveGoogleRows.map(r => ({
+        name: r.name,
+        spend: Number(r.spend),
+        clicks: Number(r.clicks),
+        cvr: Number(r.cvr),
+        roas: Number(r.roas),
+        platform: 'google',
+      })),
+    ].filter(c => c.name);
+    try {
+      const res = await fetch('/api/ad-improvement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ campaigns, targetRoas: Number(improveTargetRoas), targetCpa: Number(improveTargetCpa) }),
+      });
+      setImprovementResult(await res.json());
+    } catch {
+      setImprovementResult(null);
+    } finally {
+      setImprovementLoading(false);
+    }
+  };
 
   // ─────────────────────────────────────────────────────────────────────────────
 
@@ -555,14 +545,408 @@ export default function MarketingAgentPage() {
 
         <Tabs value={adTab} onValueChange={setAdTab}>
           <TabsList className="mb-6">
-            <TabsTrigger value="budget">広告予算の判断</TabsTrigger>
-            <TabsTrigger value="stop">止めるべき広告</TabsTrigger>
-            <TabsTrigger value="products">出すべき商品</TabsTrigger>
-            <TabsTrigger value="pages">改善すべきページ</TabsTrigger>
+            <TabsTrigger value="planning">広告プランニング</TabsTrigger>
+            <TabsTrigger value="improvement">広告改善提案</TabsTrigger>
+            <TabsTrigger value="budget">予算判断</TabsTrigger>
+            <TabsTrigger value="stop">停止判断</TabsTrigger>
           </TabsList>
 
+          {/* ══ PLANNING TAB ══ */}
+          <TabsContent value="planning">
+            <div className="space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <p className="text-sm text-blue-700">📋 新しい広告キャンペーンのプランニングをサポートします。AIが生成した指示書をもとに広告管理画面で設定してください。</p>
+              </div>
+
+              <div className="bg-white border rounded-xl p-6">
+                <h3 className="font-semibold text-slate-900 mb-4">キャンペーン情報を入力</h3>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600">広告の目的</label>
+                      <select
+                        value={planForm.objective}
+                        onChange={e => setPlanForm(f => ({ ...f, objective: e.target.value }))}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                      >
+                        <option>売上を増やしたい</option>
+                        <option>新規顧客を獲得したい</option>
+                        <option>ブランド認知を広げたい</option>
+                        <option>特定商品を売り切りたい</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600">掲載プラットフォーム</label>
+                      <div className="flex gap-4 mt-1">
+                        {['Meta(Facebook/Instagram)', 'Google検索広告', 'Googleショッピング'].map(p => (
+                          <label key={p} className="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={planForm.platforms.includes(p)}
+                              onChange={() => setPlanForm(f => ({
+                                ...f,
+                                platforms: f.platforms.includes(p)
+                                  ? f.platforms.filter(x => x !== p)
+                                  : [...f.platforms, p],
+                              }))}
+                              className="rounded"
+                            />
+                            {p}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600">月間予算</label>
+                      <div className="flex items-center gap-2">
+                        <Input type="number" value={planForm.budget} onChange={e => setPlanForm(f => ({ ...f, budget: e.target.value }))} placeholder="100000" className="flex-1 text-sm" />
+                        <span className="text-xs text-slate-400 shrink-0">円</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600">キャンペーン期間</label>
+                      <select
+                        value={planForm.campaignPeriod}
+                        onChange={e => setPlanForm(f => ({ ...f, campaignPeriod: e.target.value }))}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                      >
+                        <option>1週間</option>
+                        <option>2週間</option>
+                        <option>1ヶ月</option>
+                        <option>継続的に</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600">メイン商品</label>
+                      <select
+                        value={planForm.productName}
+                        onChange={e => setPlanForm(f => ({ ...f, productName: e.target.value }))}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                      >
+                        {topProducts.map(p => <option key={p.id}>{p.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600">ターゲット顧客</label>
+                      <textarea
+                        value={planForm.targetAudience}
+                        onChange={e => setPlanForm(f => ({ ...f, targetAudience: e.target.value }))}
+                        rows={3}
+                        placeholder="例: 料理好きな30-40代の女性、プレゼントを探している方"
+                        className="w-full border rounded-md px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30 resize-none"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600">目標KPI</label>
+                      <select
+                        value={planForm.targetKpi}
+                        onChange={e => setPlanForm(f => ({ ...f, targetKpi: e.target.value }))}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                      >
+                        <option>ROAS 3倍以上</option>
+                        <option>ROAS 2倍以上</option>
+                        <option>CPA ¥3,000以下</option>
+                        <option>CPA ¥5,000以下</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={handlePlanCreate}
+                  disabled={planLoading || planForm.platforms.length === 0}
+                  className="mt-6 w-full bg-blue-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                  {planLoading ? (
+                    <><span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />プラン作成中...</>
+                  ) : 'AIに広告プランを作成してもらう'}
+                </button>
+                {planForm.platforms.length === 0 && <p className="text-xs text-amber-600 mt-2 text-center">プラットフォームを1つ以上選択してください</p>}
+              </div>
+
+              {planResult && (
+                <div className="bg-white border-2 border-blue-900 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-lg text-blue-900">📋 広告設定指示書</h3>
+                    <button
+                      onClick={handlePlanCopy}
+                      className="border text-sm px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                    >
+                      {planCopied ? <Check size={14} className="text-teal-600" /> : <Copy size={14} />}
+                      {planCopied ? 'コピーしました' : '指示書をコピーする'}
+                    </button>
+                  </div>
+
+                  <div className="bg-amber-50 rounded-lg p-3 mb-4 text-sm text-amber-700">
+                    ⚠️ この指示書はAIが生成した推奨設定です。実際の設定は各広告管理画面で手動で行ってください。
+                  </div>
+
+                  {planForm.platforms.some(p => p.includes('Meta')) && (
+                    <div className="bg-slate-50 rounded-xl p-5 mb-4">
+                      <p className="font-medium text-slate-800 mb-3">Meta広告 設定手順</p>
+                      <div className="space-y-3">
+                        {[
+                          { key: 'objective', label: 'キャンペーン目的', value: planResult.metaPlan.objective, location: 'キャンペーン作成 > キャンペーンの目的' },
+                          { key: 'dailyBudget', label: '1日の予算', value: `¥${planResult.metaPlan.dailyBudget.toLocaleString()}`, location: '広告セット > 予算と日程' },
+                          { key: 'targetAge', label: 'ターゲット年齢', value: planResult.metaPlan.targetAge, location: '広告セット > オーディエンス > 年齢' },
+                          { key: 'interests', label: 'ターゲット興味関心', value: planResult.metaPlan.interests.join(', '), location: '広告セット > オーディエンス > 詳細なターゲット設定' },
+                          { key: 'mainCopy', label: '広告コピー（メインテキスト）', value: planResult.metaPlan.mainCopy, location: '広告 > 広告クリエイティブ' },
+                          { key: 'headline', label: '見出し', value: planResult.metaPlan.headline, location: '広告 > 広告クリエイティブ > 見出し' },
+                          { key: 'cta', label: 'CTAボタン', value: planResult.metaPlan.cta, location: '広告 > 広告クリエイティブ > 行動を促すフレーズ' },
+                        ].map(item => (
+                          <label key={item.key} className="flex items-start gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={metaChecks[item.key] || false}
+                              onChange={() => setMetaChecks(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
+                              className="mt-0.5 rounded"
+                            />
+                            <div>
+                              <p className="text-sm font-medium text-slate-800">{item.label}</p>
+                              <p className="text-xs text-slate-500">設定値: {item.value}</p>
+                              <p className="text-xs text-blue-600">設定場所: {item.location}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="mt-4">
+                        <div className="flex justify-between text-xs text-slate-500 mb-1">
+                          <span>{Object.values(metaChecks).filter(Boolean).length}/7項目を設定しました</span>
+                        </div>
+                        <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-900 rounded-full transition-all" style={{ width: `${(Object.values(metaChecks).filter(Boolean).length / 7) * 100}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {planForm.platforms.some(p => p.includes('Google')) && (
+                    <div className="bg-slate-50 rounded-xl p-5 mb-4">
+                      <p className="font-medium text-slate-800 mb-3">Google広告 設定手順</p>
+                      <div className="space-y-3">
+                        {[
+                          { key: 'campaignType', label: 'キャンペーンタイプ', value: planResult.googlePlan.campaignType, location: 'キャンペーン作成 > キャンペーンタイプ' },
+                          { key: 'dailyBudget', label: '1日の予算', value: `¥${planResult.googlePlan.dailyBudget.toLocaleString()}`, location: 'キャンペーン > 予算' },
+                          { key: 'biddingStrategy', label: '入札戦略', value: planResult.googlePlan.biddingStrategy, location: 'キャンペーン > 入札戦略' },
+                          { key: 'keywords', label: 'キーワード', value: planResult.googlePlan.keywords.join(', '), location: 'キーワード > キーワードを追加' },
+                          { key: 'negativeKeywords', label: '除外キーワード', value: planResult.googlePlan.negativeKeywords.join(', '), location: 'キーワード > 除外キーワード' },
+                          { key: 'headline1', label: '見出し1', value: planResult.googlePlan.headline1, location: '広告 > レスポンシブ検索広告' },
+                          { key: 'description', label: '説明文', value: planResult.googlePlan.description, location: '広告 > レスポンシブ検索広告 > 説明文' },
+                        ].map(item => (
+                          <label key={item.key} className="flex items-start gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={googleChecks[item.key] || false}
+                              onChange={() => setGoogleChecks(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
+                              className="mt-0.5 rounded"
+                            />
+                            <div>
+                              <p className="text-sm font-medium text-slate-800">{item.label}</p>
+                              <p className="text-xs text-slate-500">設定値: {item.value}</p>
+                              <p className="text-xs text-blue-600">設定場所: {item.location}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="mt-4">
+                        <div className="flex justify-between text-xs text-slate-500 mb-1">
+                          <span>{Object.values(googleChecks).filter(Boolean).length}/7項目を設定しました</span>
+                        </div>
+                        <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-900 rounded-full transition-all" style={{ width: `${(Object.values(googleChecks).filter(Boolean).length / 7) * 100}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-amber-50 rounded-xl p-5 mt-4">
+                    <p className="font-medium text-slate-800">📊 このプランの期待値（目安）</p>
+                    <div className="grid grid-cols-4 gap-4 mt-3">
+                      {[
+                        { label: '月間インプレッション', value: `約${planResult.forecast.monthlyImpressions.toLocaleString()}回` },
+                        { label: '月間クリック数', value: `約${planResult.forecast.monthlyClicks.toLocaleString()}回` },
+                        { label: '期待ROAS', value: `${planResult.forecast.expectedRoas}倍` },
+                        { label: '期待注文数', value: `約${planResult.forecast.expectedOrders}件` },
+                      ].map(item => (
+                        <div key={item.label} className="bg-white border rounded-lg p-3 text-center">
+                          <p className="text-xs text-slate-500">{item.label}</p>
+                          <p className="text-sm font-bold text-slate-800 mt-1">{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-3">※予測値はAIの試算です。実際の結果は市場状況により異なります。</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* ══ IMPROVEMENT TAB ══ */}
+          <TabsContent value="improvement">
+            <div className="space-y-6">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p className="text-sm text-amber-700">📈 稼働中の広告データを入力すると、AIが具体的な改善指示書を生成します。指示書をもとに広告管理画面で修正してください。</p>
+              </div>
+
+              <div className="bg-white border rounded-xl p-6">
+                <h3 className="font-semibold text-slate-900 mb-4">稼働中の広告データを入力</h3>
+
+                <Tabs value={improveAdPlatformTab} onValueChange={setImproveAdPlatformTab}>
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="meta">Meta広告</TabsTrigger>
+                    <TabsTrigger value="google">Google広告</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="meta">
+                    <button
+                      onClick={() => addImproveRow('meta')}
+                      disabled={improveMetaRows.length >= 8}
+                      className="flex items-center gap-1.5 border text-sm px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors mb-3"
+                    >
+                      <Plus size={14} />広告を追加する
+                    </button>
+                    {improveMetaRows.map(row => {
+                      const roas = row.purchases && row.spend ? (Number(row.purchases) * 5500 / Number(row.spend)).toFixed(2) : '—';
+                      return (
+                        <div key={row.id} className="border rounded-lg p-4 mb-3 relative">
+                          <button onClick={() => removeImproveRow(row.id, 'meta')} className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"><XIcon size={16} /></button>
+                          <div className="grid grid-cols-5 gap-3 pr-6">
+                            <div className="space-y-1"><label className="text-xs text-slate-500">キャンペーン名</label><Input value={row.name} onChange={e => updateImproveRow(row.id, 'name', e.target.value, 'meta')} placeholder="春の新商品キャンペーン" className="text-xs" /></div>
+                            <div className="space-y-1"><label className="text-xs text-slate-500">月間費用（円）</label><Input type="number" value={row.spend} onChange={e => updateImproveRow(row.id, 'spend', e.target.value, 'meta')} placeholder="120000" className="text-xs" /></div>
+                            <div className="space-y-1"><label className="text-xs text-slate-500">クリック数</label><Input type="number" value={row.clicks} onChange={e => updateImproveRow(row.id, 'clicks', e.target.value, 'meta')} placeholder="2400" className="text-xs" /></div>
+                            <div className="space-y-1"><label className="text-xs text-slate-500">購入数</label><Input type="number" value={row.purchases} onChange={e => updateImproveRow(row.id, 'purchases', e.target.value, 'meta')} placeholder="42" className="text-xs" /></div>
+                            <div className="space-y-1"><label className="text-xs text-slate-500">ROAS（自動計算）</label><div className="border rounded-md px-3 py-2 text-sm bg-slate-50 text-slate-600">{roas}{roas !== '—' ? '倍' : ''}</div></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </TabsContent>
+
+                  <TabsContent value="google">
+                    <button
+                      onClick={() => addImproveRow('google')}
+                      disabled={improveGoogleRows.length >= 8}
+                      className="flex items-center gap-1.5 border text-sm px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors mb-3"
+                    >
+                      <Plus size={14} />広告を追加する
+                    </button>
+                    {improveGoogleRows.length === 0 && (
+                      <p className="text-sm text-slate-400 text-center py-4">「広告を追加する」ボタンでGoogle広告データを入力してください</p>
+                    )}
+                    {improveGoogleRows.map(row => (
+                      <div key={row.id} className="border rounded-lg p-4 mb-3 relative">
+                        <button onClick={() => removeImproveRow(row.id, 'google')} className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"><XIcon size={16} /></button>
+                        <div className="grid grid-cols-5 gap-3 pr-6">
+                          <div className="space-y-1"><label className="text-xs text-slate-500">キャンペーン名</label><Input value={row.name} onChange={e => updateImproveRow(row.id, 'name', e.target.value, 'google')} className="text-xs" /></div>
+                          <div className="space-y-1"><label className="text-xs text-slate-500">月間費用（円）</label><Input type="number" value={row.spend} onChange={e => updateImproveRow(row.id, 'spend', e.target.value, 'google')} className="text-xs" /></div>
+                          <div className="space-y-1"><label className="text-xs text-slate-500">クリック数</label><Input type="number" value={row.clicks} onChange={e => updateImproveRow(row.id, 'clicks', e.target.value, 'google')} className="text-xs" /></div>
+                          <div className="space-y-1"><label className="text-xs text-slate-500">CVR(%)</label><Input type="number" step="0.1" value={row.cvr} onChange={e => updateImproveRow(row.id, 'cvr', e.target.value, 'google')} className="text-xs" /></div>
+                          <div className="space-y-1"><label className="text-xs text-slate-500">ROAS</label><Input type="number" step="0.1" value={row.roas} onChange={e => updateImproveRow(row.id, 'roas', e.target.value, 'google')} className="text-xs" /></div>
+                        </div>
+                      </div>
+                    ))}
+                  </TabsContent>
+                </Tabs>
+
+                <div className="bg-slate-50 rounded-lg p-4 mt-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600">目標ROAS</label>
+                      <div className="flex items-center gap-2"><Input type="number" step="0.1" value={improveTargetRoas} onChange={e => setImproveTargetRoas(e.target.value)} placeholder="3.0" className="flex-1 text-sm" /><span className="text-xs text-slate-400 shrink-0">倍</span></div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600">目標CPA</label>
+                      <div className="flex items-center gap-2"><Input type="number" value={improveTargetCpa} onChange={e => setImproveTargetCpa(e.target.value)} placeholder="3000" className="flex-1 text-sm" /><span className="text-xs text-slate-400 shrink-0">円</span></div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600">月間予算上限</label>
+                      <div className="flex items-center gap-2"><Input type="number" value={improveBudgetCap} onChange={e => setImproveBudgetCap(e.target.value)} placeholder="500000" className="flex-1 text-sm" /><span className="text-xs text-slate-400 shrink-0">円</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleImprovementAnalyze}
+                  disabled={improvementLoading}
+                  className="mt-4 w-full bg-blue-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                  {improvementLoading ? (
+                    <><span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />分析中...</>
+                  ) : 'AIに改善提案を作成してもらう'}
+                </button>
+              </div>
+
+              {improvementResult && (
+                <div className="space-y-4">
+                  {improvementResult.campaigns.map((c, i) => {
+                    const checkPrefix = `c${i}`;
+                    if (c.status === 'good') return (
+                      <div key={i} className="bg-green-50 border border-green-200 rounded-xl p-5">
+                        <p className="font-semibold text-green-700">✅ {c.name}: 目標達成中</p>
+                        <p className="text-sm text-slate-600 mt-1">現在ROAS {c.currentRoas}倍 / 目標{improveTargetRoas}倍</p>
+                        <p className="text-sm text-slate-500 mt-2">このキャンペーンは現在の設定を維持してください。</p>
+                      </div>
+                    );
+                    if (c.status === 'stop') return (
+                      <div key={i} className="bg-red-50 border-2 border-red-400 rounded-xl p-5">
+                        <p className="font-semibold text-red-700">🛑 {c.name}: 停止を推奨</p>
+                        <p className="text-sm text-slate-600 mt-1">ROAS {c.currentRoas}倍は採算ラインを下回っています</p>
+                        <p className="text-sm text-red-600 mt-1">月間損失推定: ¥{c.lossAmount.toLocaleString()}</p>
+                        <div className="mt-3 space-y-2">
+                          {[
+                            `Step 1: 広告管理画面にログイン`,
+                            `Step 2: キャンペーン一覧から「${c.name}」を選択`,
+                            `Step 3: ステータスを「一時停止」に変更`,
+                            `Step 4: 節約できた予算を改善中のキャンペーンに振り替える`,
+                          ].map((step, j) => (
+                            <label key={j} className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+                              <input type="checkbox" checked={improveChecks[`${checkPrefix}_stop_${j}`] || false} onChange={() => setImproveChecks(prev => ({ ...prev, [`${checkPrefix}_stop_${j}`]: !prev[`${checkPrefix}_stop_${j}`] }))} className="rounded" />
+                              {step}
+                            </label>
+                          ))}
+                        </div>
+                        <p className="text-xs text-slate-400 mt-2">※この指示書はAIの提案です。実際の操作は広告管理画面で手動で行ってください。</p>
+                      </div>
+                    );
+                    return (
+                      <div key={i} className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+                        <p className="font-semibold text-amber-700">⚠️ {c.name}: 改善が必要</p>
+                        <p className="text-sm text-slate-600 mt-1">現在ROAS {c.currentRoas}倍 / 目標{improveTargetRoas}倍</p>
+                        <div className="bg-white rounded-lg p-4 mt-3">
+                          <p className="text-sm font-medium text-slate-800 mb-3">以下を広告管理画面で修正してください:</p>
+                          <div className="space-y-3">
+                            {[
+                              { key: 'targeting', label: 'ターゲティングの修正', detail: c.improvements.targeting, location: '広告セット > オーディエンス' },
+                              { key: 'budget', label: '予算の調整', detail: `現在¥${c.improvements.budget.current}/日 → 推奨¥${c.improvements.budget.recommended}/日（${c.improvements.budget.reason}）`, location: 'キャンペーン > 予算と日程' },
+                              { key: 'creative', label: 'クリエイティブの変更', detail: c.improvements.creative, location: '広告 > クリエイティブを編集' },
+                              { key: 'keywords', label: 'キーワード最適化', detail: `追加: ${c.improvements.keywords.add.join(', ')} / 除外: ${c.improvements.keywords.remove.join(', ')}`, location: 'キーワード' },
+                            ].map(item => (
+                              <label key={item.key} className="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" checked={improveChecks[`${checkPrefix}_${item.key}`] || false} onChange={() => setImproveChecks(prev => ({ ...prev, [`${checkPrefix}_${item.key}`]: !prev[`${checkPrefix}_${item.key}`] }))} className="mt-0.5 rounded" />
+                                <div>
+                                  <p className="text-sm font-medium text-slate-800">{item.label}</p>
+                                  <p className="text-xs text-slate-500">{item.detail}</p>
+                                  <p className="text-xs text-blue-600">設定場所: {item.location}</p>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                          <div className="bg-blue-50 rounded-lg p-3 mt-3">
+                            <p className="text-sm text-blue-700">改善後の期待ROAS: {c.expectedRoasAfter.toFixed(1)}倍（現在比 +{(c.expectedRoasAfter - c.currentRoas).toFixed(1)}倍）</p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-2">※この指示書はAIの提案です。実際の設定は広告管理画面で手動で行ってください。</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
           {/* ══════════════════════════════════════════════════════════════════
-              TAB 1: 広告予算の判断
+              TAB budget: 予算判断
           ══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="budget">
             <div className="bg-white border rounded-xl p-6">
@@ -820,7 +1204,7 @@ export default function MarketingAgentPage() {
           </TabsContent>
 
           {/* ══════════════════════════════════════════════════════════════════
-              TAB 2: 止めるべき広告
+              TAB stop: 停止判断
           ══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="stop">
             <div className="bg-white border rounded-xl p-6">
@@ -1042,466 +1426,10 @@ export default function MarketingAgentPage() {
               </div>
             )}
           </TabsContent>
-
-          {/* ══════════════════════════════════════════════════════════════════
-              TAB 3: 出すべき商品
-          ══════════════════════════════════════════════════════════════════ */}
-          <TabsContent value="products">
-            <div className="bg-white border rounded-xl p-6">
-              <h3 className="font-semibold text-slate-900 mb-1">📦 広告に出すべき商品を選びます</h3>
-              <p className="text-sm text-slate-500 mb-6">
-                利益率・在庫・需要トレンドを総合的に判断して、今広告をかけるべき商品を提案します
-              </p>
-
-              {/* 2×2 Matrix */}
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-xs font-medium text-slate-500">推奨度マトリクス</p>
-                </div>
-                <div className="grid grid-cols-2 gap-0 border rounded-xl overflow-hidden">
-                  {/* Header row */}
-                  <div className="col-span-2 grid grid-cols-2 bg-slate-50 border-b">
-                    <div className="p-2 text-center text-xs text-slate-500 border-r">
-                      ← 在庫不足 ／ 在庫充足 →
-                    </div>
-                    <div className="p-2 text-center text-xs text-slate-500"></div>
-                  </div>
-                  {/* Top-right: 今すぐ */}
-                  <div className="bg-green-50 border-2 border-green-400 p-4 border-r">
-                    <p className="text-xs font-semibold text-green-700 mb-2">
-                      ↑ 利益率高 × 在庫充足
-                    </p>
-                    <p className="text-xs text-green-600 font-medium mb-2">✅ 今すぐ広告をかけるべき</p>
-                    <div className="space-y-1">
-                      {quadrantMap.topRight.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => setModalProduct(p)}
-                          className="block text-left text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200 transition-colors w-full truncate"
-                        >
-                          {p.name}
-                        </button>
-                      ))}
-                      {quadrantMap.topRight.length === 0 && (
-                        <p className="text-xs text-slate-400">該当なし</p>
-                      )}
-                    </div>
-                  </div>
-                  {/* Top-left: 仕入れ後に */}
-                  <div className="bg-blue-50 border border-blue-300 p-4">
-                    <p className="text-xs font-semibold text-blue-700 mb-2">
-                      ↑ 利益率高 × 在庫不足
-                    </p>
-                    <p className="text-xs text-blue-600 font-medium mb-2">📦 仕入れ後に広告をかける</p>
-                    <div className="space-y-1">
-                      {quadrantMap.topLeft.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => setModalProduct(p)}
-                          className="block text-left text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors w-full truncate"
-                        >
-                          {p.name}
-                        </button>
-                      ))}
-                      {quadrantMap.topLeft.length === 0 && (
-                        <p className="text-xs text-slate-400">該当なし</p>
-                      )}
-                    </div>
-                  </div>
-                  {/* Bottom-right: 価格改善後 */}
-                  <div className="bg-amber-50 border border-amber-300 p-4 border-r border-t">
-                    <p className="text-xs font-semibold text-amber-700 mb-2">
-                      ↓ 利益率低 × 在庫充足
-                    </p>
-                    <p className="text-xs text-amber-600 font-medium mb-2">🔄 価格改善後に広告を検討</p>
-                    <div className="space-y-1">
-                      {quadrantMap.bottomRight.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => setModalProduct(p)}
-                          className="block text-left text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded hover:bg-amber-200 transition-colors w-full truncate"
-                        >
-                          {p.name}
-                        </button>
-                      ))}
-                      {quadrantMap.bottomRight.length === 0 && (
-                        <p className="text-xs text-slate-400">該当なし</p>
-                      )}
-                    </div>
-                  </div>
-                  {/* Bottom-left: 広告は控える */}
-                  <div className="bg-red-50 border border-red-300 p-4 border-t">
-                    <p className="text-xs font-semibold text-red-700 mb-2">
-                      ↓ 利益率低 × 在庫不足
-                    </p>
-                    <p className="text-xs text-red-600 font-medium mb-2">🚫 広告は控える</p>
-                    <div className="space-y-1">
-                      {quadrantMap.bottomLeft.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => setModalProduct(p)}
-                          className="block text-left text-xs bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200 transition-colors w-full truncate"
-                        >
-                          {p.name}
-                        </button>
-                      ))}
-                      {quadrantMap.bottomLeft.length === 0 && (
-                        <p className="text-xs text-slate-400">該当なし</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-400 mt-1">※商品名をクリックすると詳細スコアを確認できます</p>
-              </div>
-
-              {/* Score cards */}
-              <h4 className="text-sm font-semibold text-slate-700 mb-3">商品別 広告推奨スコア</h4>
-              <div className="space-y-3">
-                {sortedProducts.map((p) => {
-                  const score = calcAdScore(p);
-                  const verdict = getVerdictInfo(score);
-                  const ringColor = getScoreRingColor(score);
-                  const budget = calcRecommendedBudget(score);
-                  return (
-                    <div key={p.id} className="border rounded-xl p-5 flex items-center gap-4">
-                      {/* Left: info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-800">{p.name}</p>
-                        <p className="text-xs text-slate-500 mt-1">
-                          在庫残{p.stockDays}日 ・ 粗利率{p.marginRate}% ・ 週間販売{p.weeklySales}個
-                        </p>
-                      </div>
-                      {/* Center: score circle */}
-                      <div
-                        className={`shrink-0 w-16 h-16 rounded-full border-4 ${ringColor} flex flex-col items-center justify-center`}
-                      >
-                        <span className="text-xl font-bold text-slate-800">{score}</span>
-                        <span className="text-xs text-slate-500">点</span>
-                      </div>
-                      {/* Right: verdict */}
-                      <div className="shrink-0 text-right space-y-1">
-                        <span className={`inline-block text-sm font-medium px-3 py-1 rounded-full ${verdict.color}`}>
-                          {verdict.icon} {verdict.label}
-                        </span>
-                        {budget > 0 && (
-                          <p className="text-sm font-medium text-slate-700">
-                            推奨月間予算 ¥{budget.toLocaleString()}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* AI comment */}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4">
-                <p className="text-sm text-slate-700">
-                  現時点で最も広告効果が高いのは
-                  <span className="font-semibold text-amber-800 mx-1">{topProduct.name}</span>
-                  です。粗利率{topProduct.marginRate}%・在庫{topProduct.stockDays}日分と条件が揃っており、今すぐ出稿できる状態です。
-                  在庫を確保した上で月¥{calcRecommendedBudget(topScore).toLocaleString()}の出稿を推奨します。
-                </p>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* ══════════════════════════════════════════════════════════════════
-              TAB 4: 改善すべきページ
-          ══════════════════════════════════════════════════════════════════ */}
-          <TabsContent value="pages">
-            <div className="bg-white border rounded-xl p-6">
-              <h3 className="font-semibold text-slate-900 mb-1">📄 改善すべき商品ページを特定します</h3>
-              <p className="text-sm text-slate-500 mb-5">
-                広告をかけているのに売れないページを特定し、改善ポイントを提案します
-              </p>
-
-              <div className="grid grid-cols-2 gap-6">
-                {/* Left: page rows */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm font-medium text-slate-700">広告実施中のページを入力してください</p>
-                    <button
-                      onClick={addPageRow}
-                      disabled={pageRows.length >= 5}
-                      className="flex items-center gap-1 text-xs border px-3 py-1.5 rounded text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors"
-                    >
-                      <Plus size={12} />
-                      追加
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {pageRows.map((row) => (
-                      <div key={row.id} className="border rounded-lg p-3 relative">
-                        <button
-                          onClick={() => removePageRow(row.id)}
-                          className="absolute top-2 right-2 text-slate-400 hover:text-slate-600"
-                        >
-                          <XIcon size={14} />
-                        </button>
-                        <div className="grid grid-cols-4 gap-2 pr-5">
-                          <div className="space-y-1">
-                            <label className="text-xs text-slate-500">ページ/商品名</label>
-                            <Input
-                              value={row.pageName}
-                              onChange={(e) => updatePageRow(row.id, 'pageName', e.target.value)}
-                              placeholder="ヒノキカッティングボード"
-                              className="text-xs"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-xs text-slate-500">クリック数/月</label>
-                            <Input
-                              type="number"
-                              value={row.clicks}
-                              onChange={(e) => updatePageRow(row.id, 'clicks', e.target.value)}
-                              placeholder="2400"
-                              className="text-xs"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-xs text-slate-500">購入数/月</label>
-                            <Input
-                              type="number"
-                              value={row.purchases}
-                              onChange={(e) => updatePageRow(row.id, 'purchases', e.target.value)}
-                              placeholder="42"
-                              className="text-xs"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-xs text-slate-500">直帰率%</label>
-                            <Input
-                              type="number"
-                              value={row.bounceRate}
-                              onChange={(e) => updatePageRow(row.id, 'bounceRate', e.target.value)}
-                              placeholder="68"
-                              className="text-xs"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Right: benchmark */}
-                <div>
-                  <p className="text-sm font-medium text-slate-700 mb-3">業種のCVRベンチマーク</p>
-                  <select
-                    value={t4Benchmark}
-                    onChange={(e) => setT4Benchmark(e.target.value)}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30"
-                  >
-                    {Object.entries(benchmarkMap).map(([key, { label }]) => (
-                      <option key={key} value={key}>{label}</option>
-                    ))}
-                  </select>
-                  <div className="mt-4 bg-slate-50 rounded-lg p-4">
-                    <p className="text-xs text-slate-500 mb-1">選択中のベンチマーク</p>
-                    <p className="text-2xl font-bold text-slate-800">
-                      {benchmarkMap[t4Benchmark].rate}%
-                    </p>
-                    <p className="text-xs text-slate-400 mt-1">{benchmarkMap[t4Benchmark].label}</p>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={handlePageImprovement}
-                disabled={t4Loading || pageRows.length === 0}
-                className="mt-6 w-full bg-blue-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-              >
-                {t4Loading ? (
-                  <>
-                    <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    分析中...
-                  </>
-                ) : (
-                  'AIに改善ポイントを分析してもらう'
-                )}
-              </button>
-            </div>
-
-            {/* Error */}
-            {!t4Loading && t4Error && (
-              <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
-                <p className="text-sm text-red-600">分析中にエラーが発生しました。再試行してください。</p>
-                <button
-                  onClick={handlePageImprovement}
-                  className="text-sm border border-red-300 text-red-600 px-3 py-1.5 rounded hover:bg-red-100 transition-colors shrink-0 ml-4"
-                >
-                  再試行
-                </button>
-              </div>
-            )}
-
-            {/* Results */}
-            {t4Result && (
-              <div className="mt-6">
-                {t4Result.results.map((r, i) => {
-                  const benchmarkRate = benchmarkMap[t4Benchmark].rate;
-                  const barMax = Math.max(benchmarkRate * 2.2, r.cvr * 1.5, 0.01);
-                  const cvrPct = Math.min((r.cvr / barMax) * 100, 100);
-                  const benchPct = Math.min((benchmarkRate / barMax) * 100, 100);
-                  const targetPct = Math.min(((benchmarkRate * 1.1) / barMax) * 100, 100);
-
-                  const priorityBadge =
-                    r.priority === 'urgent'
-                      ? 'bg-red-100 text-red-700'
-                      : r.priority === 'high'
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-slate-100 text-slate-600';
-                  const priorityLabel =
-                    r.priority === 'urgent' ? '最優先' : r.priority === 'high' ? '優先' : '様子見';
-
-                  return (
-                    <div key={i} className="border rounded-xl p-5 mb-4">
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium text-slate-800">{r.pageName}</p>
-                        <span className={`text-xs font-medium px-3 py-1 rounded-full ${priorityBadge}`}>
-                          {priorityLabel}
-                        </span>
-                      </div>
-
-                      {/* CVR bar */}
-                      <div className="mt-3">
-                        <p className="text-xs text-slate-500 mb-2">
-                          現在のCVR: <span className="font-medium text-slate-700">{r.cvr}%</span>
-                        </p>
-                        <div className="relative h-3 bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className="absolute left-0 top-0 h-full bg-blue-400 rounded-full transition-all"
-                            style={{ width: `${cvrPct}%` }}
-                          />
-                        </div>
-                        <div className="relative h-4 mt-0.5">
-                          {/* Benchmark marker */}
-                          <div
-                            className="absolute top-0 flex flex-col items-center"
-                            style={{ left: `${benchPct}%`, transform: 'translateX(-50%)' }}
-                          >
-                            <div className="w-0.5 h-2 bg-amber-400" />
-                            <span className="text-xs text-amber-600 whitespace-nowrap">業界平均</span>
-                          </div>
-                          {/* Target marker */}
-                          <div
-                            className="absolute top-0 flex flex-col items-center"
-                            style={{ left: `${targetPct}%`, transform: 'translateX(-50%)' }}
-                          >
-                            <div className="w-0.5 h-2 bg-green-500" />
-                            <span className="text-xs text-green-600 whitespace-nowrap">目標</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Revenue impact */}
-                      <div className="bg-green-50 rounded-lg p-3 mt-4">
-                        <p className="text-sm text-slate-700">
-                          CVRが業界平均（{r.benchmark}%）まで改善すると
-                          <span className="font-semibold text-green-700 mx-1">
-                            月+{r.additionalOrders}件
-                          </span>
-                          の注文増・
-                          <span className="font-semibold text-green-700 mx-1">
-                            月+¥{r.revenueImpact.toLocaleString()}
-                          </span>
-                          の売上増が見込めます
-                        </p>
-                      </div>
-
-                      {/* Improvements */}
-                      <div className="mt-3 space-y-2">
-                        {r.improvements.map((imp, j) => (
-                          <div key={j} className="flex items-start gap-2">
-                            <span className="shrink-0 text-base">{categoryIcon[imp.category]}</span>
-                            <p className="flex-1 text-sm text-slate-700">{imp.content}</p>
-                            <span
-                              className={`shrink-0 text-xs px-2 py-0.5 rounded-full ${difficultyBadge[imp.difficulty]}`}
-                            >
-                              {difficultyLabel[imp.difficulty]}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <button
-                        onClick={() => router.push('/agents/build')}
-                        className="mt-4 w-full bg-blue-900 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition-colors"
-                      >
-                        構築AIで商品ページを改善する
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </TabsContent>
         </Tabs>
       </div>
 
-      {/* ── 5. SNS post generation ────────────────────────── */}
-      <div className="bg-white border rounded-xl p-6">
-        <h2 className="font-semibold text-slate-900 mb-4">📱 SNS投稿を生成する</h2>
-
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-600">商品を選択</label>
-            <select
-              value={selectedProduct}
-              onChange={(e) => { setSelectedProduct(e.target.value); setPost(null); }}
-              className="w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30"
-            >
-              {products.map((p) => (
-                <option key={p}>{p}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-600">プラットフォーム</label>
-            <Tabs
-              value={platform}
-              onValueChange={(v) => { setPlatform(v as Platform); setPost(null); }}
-            >
-              <TabsList>
-                {(['Instagram', 'X', 'Facebook'] as Platform[]).map((p) => (
-                  <TabsTrigger key={p} value={p}>{p}</TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-          </div>
-
-          <div>
-            <button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="flex items-center gap-2 bg-blue-900 text-white text-sm px-5 py-2 rounded-md hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <Sparkles size={15} />
-              {generating ? '生成中...' : '投稿文を生成する'}
-            </button>
-          </div>
-
-          {post && (
-            <div className="bg-slate-50 rounded-lg p-4 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-medium text-slate-500">{platform} 投稿プレビュー</p>
-                <button
-                  onClick={handleSnsCopy}
-                  className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 transition-colors"
-                >
-                  {snsCopied ? <Check size={13} className="text-teal-600" /> : <Copy size={13} />}
-                  {snsCopied ? 'コピーしました' : 'コピーする'}
-                </button>
-              </div>
-              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{post}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── 6. History table ──────────────────────────────── */}
+      {/* ── 5. History table ──────────────────────────────── */}
       <div className="bg-white border rounded-xl p-6">
         <h2 className="font-semibold text-slate-900 mb-4">実行履歴</h2>
         <Table>
@@ -1529,73 +1457,6 @@ export default function MarketingAgentPage() {
           </TableBody>
         </Table>
       </div>
-
-      {/* ── Product detail modal (Tab 3) ──────────────────── */}
-      {modalProduct && (
-        <div
-          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center"
-          onClick={() => setModalProduct(null)}
-        >
-          <div
-            className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="font-semibold text-slate-900">{modalProduct.name}</h3>
-              <button
-                onClick={() => setModalProduct(null)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <XIcon size={18} />
-              </button>
-            </div>
-            {(() => {
-              const score = calcAdScore(modalProduct);
-              const ringColor = getScoreRingColor(score);
-              const verdict = getVerdictInfo(score);
-              const budget = calcRecommendedBudget(score);
-              return (
-                <>
-                  <div className="flex items-center gap-4 mb-4">
-                    <div
-                      className={`w-20 h-20 rounded-full border-4 ${ringColor} flex flex-col items-center justify-center`}
-                    >
-                      <span className="text-2xl font-bold text-slate-800">{score}</span>
-                      <span className="text-xs text-slate-500">点</span>
-                    </div>
-                    <div>
-                      <span className={`inline-block text-sm font-medium px-3 py-1 rounded-full ${verdict.color}`}>
-                        {verdict.icon} {verdict.label}
-                      </span>
-                      {budget > 0 && (
-                        <p className="text-sm text-slate-600 mt-1">
-                          推奨月間予算 ¥{budget.toLocaleString()}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-2 bg-slate-50 rounded-lg p-4 text-sm">
-                    {[
-                      { label: '粗利率', value: `${modalProduct.marginRate}%`, ok: modalProduct.marginRate >= 40 },
-                      { label: '在庫残日数', value: `${modalProduct.stockDays}日`, ok: modalProduct.stockDays >= 30 },
-                      { label: '週間販売数', value: `${modalProduct.weeklySales}個`, ok: modalProduct.weeklySales >= avgWeeklySales },
-                      { label: '販売価格', value: `¥${modalProduct.price.toLocaleString()}`, ok: true },
-                      { label: '原価', value: `¥${modalProduct.cost.toLocaleString()}`, ok: true },
-                    ].map((item) => (
-                      <div key={item.label} className="flex justify-between">
-                        <span className="text-slate-500">{item.label}</span>
-                        <span className={`font-medium ${item.ok ? 'text-slate-800' : 'text-red-500'}`}>
-                          {item.value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

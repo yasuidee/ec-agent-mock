@@ -124,6 +124,11 @@ export default function InventoryPage() {
   const [orderNotes, setOrderNotes] = useState('');
   const [orderPreviewCopied, setOrderPreviewCopied] = useState(false);
 
+  // --- Shopify在庫連携 ---
+  const [updatedStocks, setUpdatedStocks] = useState<Record<string, number>>({});
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isUpdated, setIsUpdated] = useState(false);
+
   // --- AI展開 ---
   const [expandedActions, setExpandedActions] = useState<Record<string, string>>({});
   const [loadingAI, setLoadingAI] = useState<Record<string, boolean>>({});
@@ -739,6 +744,105 @@ export default function InventoryPage() {
             </div>
           )}
         </TabsContent>
+
+        {/* ── Shopify在庫連携 ──────────────────────────── */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mt-6">
+          <h3 className="font-semibold text-blue-900">🔄 Shopifyに在庫数を反映する</h3>
+          <p className="text-sm text-blue-600 mt-1">発注が完了したら、Shopifyの在庫数を更新してください。</p>
+
+          <div className="bg-amber-50 rounded-lg p-3 mb-4 mt-4">
+            <p className="text-sm text-amber-700 font-medium">⚠️ Shopify未接続 - 現在モックで動作中</p>
+            <p className="text-xs text-amber-600 mt-1">Shopifyと連携すると、ここから直接在庫数を更新できます。</p>
+          </div>
+
+          <p className="text-sm font-medium text-slate-700 mb-3">発注完了後の在庫数を入力して更新してください:</p>
+
+          {orderRecommendations.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-4">タブ「発注数おすすめ」で商品を選択してください</p>
+          ) : (
+            <>
+              {orderRecommendations.map(item => {
+                const newStock = updatedStocks[item.id] !== undefined
+                  ? updatedStocks[item.id]
+                  : item.currentStock + item.recommendedQty;
+                return (
+                  <div key={item.id} className="bg-white border rounded-lg p-4 mb-3 flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-sm text-slate-800">{item.name}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">現在の在庫: {item.currentStock}個</p>
+                      <p className="text-xs text-blue-600 mt-0.5">推奨発注数: +{item.recommendedQty}個</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">発注完了後の在庫数</p>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min={0}
+                            className="w-24 border rounded px-2 py-1 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                            value={newStock}
+                            onChange={e => setUpdatedStocks(prev => ({ ...prev, [item.id]: Number(e.target.value) }))}
+                          />
+                          <span className="text-sm text-slate-500">個</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <button
+                onClick={() => {
+                  setIsUpdating(true);
+                  setTimeout(() => {
+                    setIsUpdating(false);
+                    setIsUpdated(true);
+                    toast({ title: '✅ 在庫更新の指示書を作成しました。Shopify連携後に自動で反映されます。' });
+                  }, 1500);
+                }}
+                disabled={isUpdating}
+                className="bg-blue-900 text-white w-full py-3 rounded-lg mt-4 text-sm font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                {isUpdating ? (
+                  <><span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />更新中...</>
+                ) : 'Shopifyの在庫を更新する'}
+              </button>
+              <p className="text-xs text-slate-400 mt-2 text-center">
+                ※この機能は未実装です。Shopify連携後に実際の在庫更新が可能になります。
+              </p>
+
+              {isUpdated && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 mt-4">
+                  <p className="font-medium text-green-700">✅ 在庫更新指示書を作成しました</p>
+                  <div className="mt-3">
+                    {orderRecommendations.map(item => {
+                      const newStock = updatedStocks[item.id] !== undefined
+                        ? updatedStocks[item.id]
+                        : item.currentStock + item.recommendedQty;
+                      return (
+                        <div key={item.id} className="flex justify-between py-2 border-b last:border-b-0 text-sm">
+                          <span className="text-slate-700">{item.name}</span>
+                          <span className="text-slate-600">{item.currentStock}個 → {newStock}個</span>
+                          <span className="text-green-600">✅</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-sm font-medium text-slate-700 mt-4">Shopify管理画面で反映する手順:</p>
+                  <ol className="mt-2 space-y-1 text-sm text-slate-600 list-decimal list-inside">
+                    <li>Shopify管理画面にログイン</li>
+                    <li>「商品」→「在庫」を選択</li>
+                    <li>各商品の在庫数を上記の数値に更新</li>
+                    <li>「保存する」をクリック</li>
+                  </ol>
+                  <p className="text-xs text-slate-400 mt-3">
+                    ※Shopify連携が完了すると、この手順は自動化されます。
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
         {/* ══════════════════════════════════════════════
             TAB 3: 滞留在庫アラート

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { AlertTriangle, ShoppingCart, Archive } from 'lucide-react';
 import { topProducts } from '@/lib/mock-data';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -387,10 +388,16 @@ export default function InventoryPage() {
 
       {/* タブ */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 w-full max-w-lg">
-          <TabsTrigger value="forecast">📉 在庫切れ予報</TabsTrigger>
-          <TabsTrigger value="order">🛒 発注数おすすめ</TabsTrigger>
-          <TabsTrigger value="slowmove">🐌 滞留在庫アラート</TabsTrigger>
+        <TabsList className="bg-white border border-slate-200 rounded-xl p-1 flex gap-1 h-auto w-full">
+          <TabsTrigger value="forecast" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+            <AlertTriangle className="w-4 h-4" />在庫切れ予報
+          </TabsTrigger>
+          <TabsTrigger value="order" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+            <ShoppingCart className="w-4 h-4" />発注数おすすめ
+          </TabsTrigger>
+          <TabsTrigger value="slowmove" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+            <Archive className="w-4 h-4" />滞留在庫アラート
+          </TabsTrigger>
         </TabsList>
 
         {/* ══════════════════════════════════════════════

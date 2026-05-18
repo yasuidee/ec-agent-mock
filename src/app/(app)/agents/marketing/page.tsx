@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { TrendingUp, Users, Wallet, Copy, Check, X as XIcon, Plus } from 'lucide-react';
+import { TrendingUp, Users, Wallet, Copy, Check, X as XIcon, Plus, Megaphone, Target, StopCircle } from 'lucide-react';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { AgentBriefCard } from '@/components/AgentBriefCard';
 import { PageSkeleton } from '@/components/PageSkeleton';
@@ -544,11 +544,19 @@ export default function MarketingAgentPage() {
         </p>
 
         <Tabs value={adTab} onValueChange={setAdTab}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="planning">広告プランニング</TabsTrigger>
-            <TabsTrigger value="improvement">広告改善提案</TabsTrigger>
-            <TabsTrigger value="budget">予算判断</TabsTrigger>
-            <TabsTrigger value="stop">停止判断</TabsTrigger>
+          <TabsList className="bg-white border border-slate-200 rounded-xl p-1 flex gap-1 h-auto w-full mb-6">
+            <TabsTrigger value="planning" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+              <Megaphone className="w-4 h-4" />広告プランニング
+            </TabsTrigger>
+            <TabsTrigger value="improvement" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+              <Target className="w-4 h-4" />広告改善提案
+            </TabsTrigger>
+            <TabsTrigger value="budget" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+              <Wallet className="w-4 h-4" />予算判断
+            </TabsTrigger>
+            <TabsTrigger value="stop" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+              <StopCircle className="w-4 h-4" />停止判断
+            </TabsTrigger>
           </TabsList>
 
           {/* ══ PLANNING TAB ══ */}

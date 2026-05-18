@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, Clock, Sparkles, Copy, Check, Loader2 } from 'lucide-react';
+import { CheckCircle2, Clock, Sparkles, Copy, Check, Loader2, Lightbulb, FileText, TrendingUp } from 'lucide-react';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { AgentBriefCard } from '@/components/AgentBriefCard';
 import { PageSkeleton } from '@/components/PageSkeleton';
@@ -1042,10 +1042,16 @@ export default function BuildAgentPage() {
 
       {/* ── 2. 3-tab main section ─────────────────────────────── */}
       <Tabs defaultValue="proposals">
-        <TabsList>
-          <TabsTrigger value="proposals">📋 今日の提案</TabsTrigger>
-          <TabsTrigger value="generator">✨ 商品ページ生成</TabsTrigger>
-          <TabsTrigger value="pricing">📊 価格提案・分析</TabsTrigger>
+        <TabsList className="bg-white border border-slate-200 rounded-xl p-1 flex gap-1 h-auto w-full">
+          <TabsTrigger value="proposals" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+            <Lightbulb className="w-4 h-4" />今日の提案
+          </TabsTrigger>
+          <TabsTrigger value="generator" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+            <FileText className="w-4 h-4" />商品ページ生成
+          </TabsTrigger>
+          <TabsTrigger value="pricing" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+            <TrendingUp className="w-4 h-4" />価格提案・分析
+          </TabsTrigger>
         </TabsList>
 
         {/* Tab: Today's proposals */}

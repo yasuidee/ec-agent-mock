@@ -61,10 +61,10 @@ interface SlowMoveItem {
 // ヘルパー関数
 // ============================================================
 function urgencyBg(u: UrgencyLevel) {
-  if (u === 'critical') return 'bg-red-50 border-red-200';
-  if (u === 'urgent') return 'bg-orange-50 border-orange-200';
-  if (u === 'warning') return 'bg-yellow-50 border-yellow-200';
-  return 'bg-white border-gray-200';
+  if (u === 'critical') return 'bg-red-50 border-2 border-red-400 p-5';
+  if (u === 'urgent') return 'bg-amber-50 border-2 border-amber-400 p-5';
+  if (u === 'warning') return 'bg-amber-50 border border-amber-200 p-4';
+  return 'bg-white border border-slate-200 p-4';
 }
 function urgencyBadge(u: UrgencyLevel) {
   if (u === 'critical') return 'bg-red-100 text-red-700 border border-red-300';
@@ -85,9 +85,9 @@ function urgencyTextColor(u: UrgencyLevel) {
   return 'text-green-600';
 }
 function slowMoveBg(l: SlowMoveLevel) {
-  if (l === 'danger') return 'bg-red-50 border-red-200';
-  if (l === 'warning') return 'bg-yellow-50 border-yellow-200';
-  return 'bg-white border-gray-200';
+  if (l === 'danger') return 'bg-red-50 border border-red-200 p-5';
+  if (l === 'warning') return 'bg-amber-50 border border-amber-200 p-4';
+  return 'bg-white border border-slate-200 p-4';
 }
 function slowMoveBadge(l: SlowMoveLevel) {
   if (l === 'danger') return 'bg-red-100 text-red-700';
@@ -340,8 +340,8 @@ export default function InventoryPage() {
     <div className="p-6 space-y-6">
       {/* ヘッダー */}
       <PageHeader
-        title="📦 在庫管理 AI"
-        description="在庫切れ予測・発注推奨・滞留アラートをAIが自動分析"
+        title="在庫AI"
+        description="在庫切れ予報・発注最適化・滞留在庫を自動管理します"
         actions={
           <div className="flex flex-wrap gap-2">
             {criticalCount > 0 && (
@@ -362,6 +362,28 @@ export default function InventoryPage() {
           </div>
         }
       />
+
+      {/* サマリーバー */}
+      <div className="bg-white rounded-xl border border-slate-200 p-5 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center divide-x divide-slate-100">
+          <div>
+            <div className="text-2xl font-bold text-red-600">{criticalCount}</div>
+            <div className="text-xs text-slate-500 mt-1">今すぐ発注</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-orange-500">{urgentCount}</div>
+            <div className="text-xs text-slate-500 mt-1">3日以内</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-amber-600">{warningCount}</div>
+            <div className="text-xs text-slate-500 mt-1">今週中</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-green-600">{forecasts.filter(f => f.urgency === 'normal').length}</div>
+            <div className="text-xs text-slate-500 mt-1">余裕あり</div>
+          </div>
+        </div>
+      </div>
 
       {/* タブ */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -396,11 +418,11 @@ export default function InventoryPage() {
               <p className="font-medium">すべての商品が正常な在庫水準です</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-3">
               {visibleForecasts.map(item => (
                 <div
                   key={item.id}
-                  className={`rounded-xl border p-4 ${urgencyBg(item.urgency)}`}
+                  className={`rounded-xl ${urgencyBg(item.urgency)}`}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
@@ -427,6 +449,19 @@ export default function InventoryPage() {
                     </div>
                   </div>
 
+                  {/* タイムライン */}
+                  <div className="mt-3 relative h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="absolute left-0 top-0 h-full bg-blue-200 rounded-full"
+                      style={{ width: `${Math.min(100, (item.stockDays / 30) * 100)}%` }}
+                    />
+                    <div
+                      className="absolute top-0 h-full bg-amber-100 rounded-full"
+                      style={{ width: `${Math.min(30, (item.leadTimeDays / 30) * 100)}%`, left: `${Math.max(0, Math.min(95, ((item.stockDays - item.leadTimeDays) / 30) * 100))}%` }}
+                    />
+                    <div className="absolute top-0 left-0 h-full border-l-2 border-red-400 border-dashed" />
+                  </div>
+
                   {/* 発注点表示 + アクション */}
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <span className="text-xs text-gray-500">
@@ -442,7 +477,7 @@ export default function InventoryPage() {
                           `商品: ${item.name}、現在庫: ${item.currentStock}個、週間販売: ${item.weeklyVelocity}個、リードタイム: ${item.leadTimeDays}日、安全在庫: ${item.safetyStockDays}日。在庫切れリスクへの具体的な対処法を3点で教えてください。`
                         )
                       }
-                      className="text-xs px-3 py-1 rounded-lg bg-white border border-blue-300 text-blue-600 hover:bg-blue-50 transition-colors"
+                      className="border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg px-4 py-2 text-xs font-medium transition-colors"
                     >
                       {loadingAI[item.id]
                         ? '⏳ 分析中...'
@@ -456,7 +491,7 @@ export default function InventoryPage() {
                           setActiveTab('order');
                           setSelectedProducts(prev => new Set([...prev, item.id]));
                         }}
-                        className="text-xs px-3 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                        className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-xs font-medium transition-colors"
                       >
                         → 発注おすすめへ
                       </button>
@@ -481,13 +516,13 @@ export default function InventoryPage() {
         ══════════════════════════════════════════════ */}
         <TabsContent value="order" className="mt-4 space-y-5">
           {/* 設定パネル */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-gray-50 border border-gray-200">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">需要倍率</label>
               <select
                 value={demandMultiplier}
                 onChange={e => setDemandMultiplier(parseFloat(e.target.value))}
-                className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
               >
                 <option value={0.8}>×0.8（控えめ）</option>
                 <option value={1.0}>×1.0（標準）</option>
@@ -500,7 +535,7 @@ export default function InventoryPage() {
               <select
                 value={safetyStockPolicy}
                 onChange={e => setSafetyStockPolicy(e.target.value)}
-                className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
               >
                 <option value="aggressive">薄め（×0.7）</option>
                 <option value="standard">標準（×1.0）</option>
@@ -527,10 +562,10 @@ export default function InventoryPage() {
                 <button
                   key={p.id}
                   onClick={() => toggleProduct(p.id)}
-                  className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                  className={`text-sm transition-colors cursor-pointer ${
                     selectedProducts.has(p.id)
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                      ? 'border-2 border-blue-900 bg-blue-50 rounded-xl p-3'
+                      : 'border border-slate-200 rounded-xl p-3 hover:border-blue-200 hover:bg-blue-50'
                   }`}
                 >
                   {p.name}
@@ -553,7 +588,7 @@ export default function InventoryPage() {
                 return (
                   <div
                     key={item.id}
-                    className={`rounded-xl border p-4 ${urgencyBg(item.urgency)}`}
+                    className={`rounded-xl ${urgencyBg(item.urgency)}`}
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
@@ -636,21 +671,21 @@ export default function InventoryPage() {
 
               {/* 合計金額 */}
               <div
-                className={`rounded-xl border p-4 ${
+                className={`rounded-xl p-5 ${
                   totalOrderCost.overBudget
-                    ? 'bg-red-50 border-red-300'
-                    : 'bg-blue-50 border-blue-200'
+                    ? 'bg-red-50 border border-red-300'
+                    : 'bg-blue-900'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="font-semibold text-gray-900">発注合計金額</span>
+                    <span className={`font-semibold ${totalOrderCost.overBudget ? 'text-gray-900' : 'text-white'}`}>発注合計金額</span>
                     {budgetLimit && (
                       <span
                         className={`ml-2 text-xs ${
                           totalOrderCost.overBudget
                             ? 'text-red-600 font-bold'
-                            : 'text-green-600'
+                            : 'text-blue-200'
                         }`}
                       >
                         {totalOrderCost.overBudget
@@ -661,7 +696,7 @@ export default function InventoryPage() {
                   </div>
                   <span
                     className={`text-2xl font-bold ${
-                      totalOrderCost.overBudget ? 'text-red-600' : 'text-blue-700'
+                      totalOrderCost.overBudget ? 'text-red-600' : 'text-white'
                     }`}
                   >
                     ¥{totalOrderCost.total.toLocaleString()}
@@ -679,7 +714,7 @@ export default function InventoryPage() {
                 />
                 <button
                   onClick={() => setShowOrderPreview(!showOrderPreview)}
-                  className="w-full py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors text-sm"
+                  className="w-full py-3 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-semibold transition-colors text-sm"
                 >
                   {showOrderPreview ? '▲ 発注プレビューを閉じる' : '📋 発注プレビューを確認する'}
                 </button>
@@ -687,7 +722,7 @@ export default function InventoryPage() {
 
               {/* 発注プレビュー */}
               {showOrderPreview && (
-                <div className="rounded-xl border border-blue-300 bg-white p-5 space-y-3">
+                <div className="bg-white border-2 border-blue-900 rounded-xl p-6 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-gray-900">📋 発注プレビュー</h3>
                     <span className="text-xs text-gray-400">
@@ -764,7 +799,7 @@ export default function InventoryPage() {
                   ? updatedStocks[item.id]
                   : item.currentStock + item.recommendedQty;
                 return (
-                  <div key={item.id} className="bg-white border rounded-lg p-4 mb-3 flex justify-between items-center">
+                  <div key={item.id} className="bg-white border border-slate-200 rounded-xl p-4 mb-3 flex justify-between items-center">
                     <div>
                       <p className="font-medium text-sm text-slate-800">{item.name}</p>
                       <p className="text-xs text-slate-500 mt-0.5">現在の在庫: {item.currentStock}個</p>
@@ -799,7 +834,7 @@ export default function InventoryPage() {
                   }, 1500);
                 }}
                 disabled={isUpdating}
-                className="bg-blue-900 text-white w-full py-3 rounded-lg mt-4 text-sm font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                className="bg-blue-900 hover:bg-blue-950 text-white w-full py-3 rounded-lg mt-4 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 {isUpdating ? (
                   <><span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />更新中...</>
@@ -883,7 +918,7 @@ export default function InventoryPage() {
             {slowMoveItems.map(item => (
               <div
                 key={item.id}
-                className={`rounded-xl border p-4 ${slowMoveBg(item.level)}`}
+                className={`rounded-xl ${slowMoveBg(item.level)}`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>

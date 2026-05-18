@@ -10,7 +10,6 @@ import {
   MousePointerClick,
   Zap,
   MessageSquare,
-  RotateCcw,
   Sparkles,
   Megaphone,
   Package,
@@ -118,75 +117,82 @@ function ActionCard({
 
   return (
     <div
-      className={`flex items-start gap-4 rounded-xl border p-4 transition-all duration-200 ${
+      className={`bg-white rounded-xl border overflow-hidden flex items-stretch transition-all duration-200 ${
         isApproved
-          ? 'bg-emerald-50 border-emerald-200'
+          ? 'border-emerald-200'
           : isRejected
-          ? 'opacity-50 bg-white border-slate-200'
-          : 'bg-white border-slate-200 hover:border-blue-200 hover:shadow-sm'
+          ? 'opacity-50 border-slate-200'
+          : 'border-slate-200 hover:border-blue-200 hover:shadow-sm'
       }`}
     >
-      {/* Number badge */}
+      {/* Left: number block */}
       <div
-        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${
-          isApproved
-            ? 'bg-emerald-200 text-emerald-800'
-            : isRejected
-            ? 'bg-slate-200 text-slate-500'
-            : 'bg-blue-900 text-white'
+        className={`w-16 flex-shrink-0 flex items-center justify-center ${
+          isApproved ? 'bg-emerald-500' : isRejected ? 'bg-slate-300' : 'bg-blue-900'
         }`}
       >
-        {isApproved ? <CheckCircle2 size={14} /> : isRejected ? <XCircle size={14} /> : index + 1}
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <AgentBadge agent={action.category} clickable={true} />
-          <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${badge.bg} ${badge.text}`}>
-            {badge.label}
+        {isApproved ? (
+          <CheckCircle2 size={22} className="text-white" />
+        ) : isRejected ? (
+          <XCircle size={22} className="text-white" />
+        ) : (
+          <span className="text-2xl font-bold tabular-nums text-white">
+            {String(index + 1).padStart(2, '0')}
           </span>
-          {isApproved && (
-            <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-              ✓ 実行中
-            </span>
-          )}
-          {isRejected && (
-            <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-              却下済み
-            </span>
-          )}
-        </div>
-        <p className="text-sm font-semibold text-slate-900 leading-snug">{action.title}</p>
-        <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{action.description}</p>
-        <p className="text-sm font-semibold text-amber-600 mt-1">{action.expectedImpact}</p>
-        <p className="text-xs text-slate-400 mt-1 leading-relaxed">{action.reasoning}</p>
+        )}
       </div>
 
-      {/* Actions */}
-      {actionState === 'pending' && (
-        <div className="flex flex-col gap-1.5 shrink-0">
-          <button
-            onClick={onApprove}
-            className="bg-blue-900 text-white text-xs px-4 py-1.5 rounded-lg hover:bg-blue-800 transition-colors whitespace-nowrap flex items-center gap-1"
-          >
-            承認して実行 <ArrowRight size={11} />
-          </button>
-          <button
-            onClick={onReject}
-            className="border border-slate-200 text-slate-500 text-xs px-4 py-1.5 rounded-lg hover:bg-slate-50 transition-colors whitespace-nowrap"
-          >
-            却下
-          </button>
-          <Link
-            href={`/chat?action=${encodeURIComponent(action.title)}`}
-            className="flex items-center justify-center gap-1 border border-blue-200 text-blue-700 text-xs px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap"
-          >
-            <MessageSquare size={11} />
-            AIに相談
-          </Link>
+      {/* Right: content */}
+      <div className="flex-1 p-5 flex items-center gap-4">
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <AgentBadge agent={action.category} clickable={true} />
+            <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${badge.bg} ${badge.text}`}>
+              {badge.label}
+            </span>
+            {isApproved && (
+              <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                ✓ 実行中
+              </span>
+            )}
+            {isRejected && (
+              <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                却下済み
+              </span>
+            )}
+          </div>
+          <p className="text-sm font-semibold text-slate-900 leading-snug">{action.title}</p>
+          <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{action.description}</p>
+          <p className="text-sm font-semibold text-amber-600 mt-1">{action.expectedImpact}</p>
+          <p className="text-xs text-slate-400 mt-1 leading-relaxed">{action.reasoning}</p>
         </div>
-      )}
+
+        {/* Actions */}
+        {actionState === 'pending' && (
+          <div className="flex flex-col gap-1.5 shrink-0">
+            <button
+              onClick={onApprove}
+              className="bg-blue-900 text-white text-xs px-4 py-1.5 rounded-lg hover:bg-blue-800 transition-colors whitespace-nowrap flex items-center gap-1"
+            >
+              承認して実行 <ArrowRight size={11} />
+            </button>
+            <button
+              onClick={onReject}
+              className="border border-slate-200 text-slate-500 text-xs px-4 py-1.5 rounded-lg hover:bg-slate-50 transition-colors whitespace-nowrap"
+            >
+              却下
+            </button>
+            <Link
+              href={`/chat?action=${encodeURIComponent(action.title)}`}
+              className="flex items-center justify-center gap-1 border border-blue-200 text-blue-700 text-xs px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap"
+            >
+              <MessageSquare size={11} />
+              AIに相談
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -306,32 +312,47 @@ export default function DashboardPage() {
       <div className="relative rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #172554 100%)' }}>
         <div className="px-8 py-7">
           <div className="flex items-start justify-between">
+            {/* Left: greeting + main CTA */}
             <div>
               <p className="text-blue-300 text-sm font-medium mb-1">2026年5月18日 日曜日</p>
               <h1 className="text-2xl font-bold text-white">おはようございます、やすさん 👋</h1>
               <p className="text-blue-200 text-sm mt-1.5">
                 本日は <span className="text-amber-400 font-semibold">{pendingCount}つのアクション</span> が承認待ちです
               </p>
-              <div className="flex items-center gap-3 mt-4">
-                <Link
-                  href="/chat"
-                  className="flex items-center gap-2 bg-amber-400 text-amber-900 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-amber-300 transition-colors"
-                >
-                  <MessageSquare size={14} />
-                  AIに相談する
-                </Link>
+              <div className="mt-4">
                 <button
-                  onClick={handleReset}
-                  className="flex items-center gap-2 bg-white/10 text-white/80 text-sm px-4 py-2 rounded-lg hover:bg-white/20 transition-colors"
+                  onClick={() => {
+                    document.getElementById('action-cards')
+                      ?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-500 text-amber-950 font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
                 >
-                  <RotateCcw size={13} />
-                  デモをリセット
+                  最初のアクションを始める
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
-            <div className="hidden md:flex items-center gap-2 text-blue-400 text-xs">
-              <RefreshCw size={13} />
-              <span>最終更新: 数分前</span>
+
+            {/* Right: small utility buttons + refresh */}
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex gap-2">
+                <a
+                  href="/chat"
+                  className="text-xs text-blue-200 hover:text-white px-3 py-1.5 border border-blue-700 rounded-lg transition-colors"
+                >
+                  AIに相談する
+                </a>
+                <button
+                  onClick={handleReset}
+                  className="text-xs text-blue-200 hover:text-white px-3 py-1.5 border border-blue-700 rounded-lg transition-colors"
+                >
+                  デモをリセット
+                </button>
+              </div>
+              <div className="hidden md:flex items-center gap-2 text-blue-400 text-xs">
+                <RefreshCw size={13} />
+                <span>最終更新: 数分前</span>
+              </div>
             </div>
           </div>
         </div>
@@ -342,14 +363,14 @@ export default function DashboardPage() {
 
       {/* ── 2. KPI Snapshot ────────────────────────────────────────── */}
       <div className="grid grid-cols-4 gap-4">
-        <KpiCard label="今日の売上"  value={yen(kpiSummary.todayRevenue)}      deltaValue={kpiSummary.todayRevenueDelta}  icon={TrendingUp}      accent />
+        <KpiCard label="今日の売上"  value={yen(kpiSummary.todayRevenue)}      deltaValue={kpiSummary.todayRevenueDelta}  icon={TrendingUp} />
         <KpiCard label="本日注文数"  value={`${kpiSummary.todayOrders}件`}     deltaValue={kpiSummary.todayOrdersDelta}   icon={ShoppingCart} />
         <KpiCard label="CVR"         value={`${kpiSummary.cvr.toFixed(1)}%`}   deltaValue={kpiSummary.cvrDelta}           icon={MousePointerClick} />
         <KpiCard label="ROAS"        value={`${kpiSummary.roas.toFixed(1)}倍`} deltaValue={kpiSummary.roasDelta}          icon={Zap} />
       </div>
 
       {/* ── 3. Today's Brief ───────────────────────────────────────── */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
+      <div id="action-cards" className="bg-white border border-slate-200 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <h2 className="font-semibold text-lg text-slate-900">今朝のブリーフ</h2>

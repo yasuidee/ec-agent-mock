@@ -326,13 +326,13 @@ export default function CustomerAgentPage() {
       {/* Main tabs */}
       <Tabs defaultValue="reviews">
         <TabsList className="bg-white border border-slate-200 rounded-xl p-1 flex gap-1 h-auto w-full">
-          <TabsTrigger value="reviews" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+          <TabsTrigger value="reviews" className="flex items-center gap-2 px-4 py-3.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
             <Star className="w-4 h-4" />レビュー返信
           </TabsTrigger>
-          <TabsTrigger value="inquiries" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+          <TabsTrigger value="inquiries" className="flex items-center gap-2 px-4 py-3.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
             <MessageCircle className="w-4 h-4" />問い合わせ返信
           </TabsTrigger>
-          <TabsTrigger value="analysis" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
+          <TabsTrigger value="analysis" className="flex items-center gap-2 px-4 py-3.5 rounded-lg text-sm font-medium text-slate-500 transition-all duration-150 data-[state=active]:bg-blue-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-700 hover:bg-slate-50 data-[state=active]:hover:bg-blue-900 data-[state=active]:hover:text-white flex-1 justify-center">
             <BarChart3 className="w-4 h-4" />フィードバック分析
           </TabsTrigger>
         </TabsList>

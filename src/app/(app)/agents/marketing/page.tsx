@@ -462,7 +462,7 @@ export default function MarketingAgentPage() {
       {/* ── 1. Header ─────────────────────────────────────── */}
       <PageHeader
         title="集客AI"
-        description="広告配信・SNS投稿・メルマガをAIが最適化します"
+        description="広告プランニング・改善提案・予算判断をAIがサポートします"
       />
 
       <AgentBriefCard category="marketing" />
@@ -567,7 +567,7 @@ export default function MarketingAgentPage() {
                       <select
                         value={planForm.objective}
                         onChange={e => setPlanForm(f => ({ ...f, objective: e.target.value }))}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 bg-white"
                       >
                         <option>売上を増やしたい</option>
                         <option>新規顧客を獲得したい</option>
@@ -608,7 +608,7 @@ export default function MarketingAgentPage() {
                       <select
                         value={planForm.campaignPeriod}
                         onChange={e => setPlanForm(f => ({ ...f, campaignPeriod: e.target.value }))}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 bg-white"
                       >
                         <option>1週間</option>
                         <option>2週間</option>
@@ -623,7 +623,7 @@ export default function MarketingAgentPage() {
                       <select
                         value={planForm.productName}
                         onChange={e => setPlanForm(f => ({ ...f, productName: e.target.value }))}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 bg-white"
                       >
                         {topProducts.map(p => <option key={p.id}>{p.name}</option>)}
                       </select>
@@ -635,7 +635,7 @@ export default function MarketingAgentPage() {
                         onChange={e => setPlanForm(f => ({ ...f, targetAudience: e.target.value }))}
                         rows={3}
                         placeholder="例: 料理好きな30-40代の女性、プレゼントを探している方"
-                        className="w-full border rounded-md px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30 resize-none"
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 resize-none"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -643,7 +643,7 @@ export default function MarketingAgentPage() {
                       <select
                         value={planForm.targetKpi}
                         onChange={e => setPlanForm(f => ({ ...f, targetKpi: e.target.value }))}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 bg-white"
                       >
                         <option>ROAS 3倍以上</option>
                         <option>ROAS 2倍以上</option>
@@ -656,7 +656,7 @@ export default function MarketingAgentPage() {
                 <button
                   onClick={handlePlanCreate}
                   disabled={planLoading || planForm.platforms.length === 0}
-                  className="mt-6 w-full bg-blue-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                  className="mt-6 w-full bg-blue-900 hover:bg-blue-950 text-white py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                 >
                   {planLoading ? (
                     <><span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />プラン作成中...</>
@@ -671,7 +671,7 @@ export default function MarketingAgentPage() {
                     <h3 className="font-bold text-lg text-blue-900">📋 広告設定指示書</h3>
                     <button
                       onClick={handlePlanCopy}
-                      className="border text-sm px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                      className="border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5"
                     >
                       {planCopied ? <Check size={14} className="text-teal-600" /> : <Copy size={14} />}
                       {planCopied ? 'コピーしました' : '指示書をコピーする'}
@@ -695,7 +695,7 @@ export default function MarketingAgentPage() {
                           { key: 'headline', label: '見出し', value: planResult.metaPlan.headline, location: '広告 > 広告クリエイティブ > 見出し' },
                           { key: 'cta', label: 'CTAボタン', value: planResult.metaPlan.cta, location: '広告 > 広告クリエイティブ > 行動を促すフレーズ' },
                         ].map(item => (
-                          <label key={item.key} className="flex items-start gap-3 cursor-pointer">
+                          <label key={item.key} className="flex items-start gap-3 cursor-pointer hover:bg-slate-50 rounded-lg p-3 transition-colors">
                             <input
                               type="checkbox"
                               checked={metaChecks[item.key] || false}
@@ -734,7 +734,7 @@ export default function MarketingAgentPage() {
                           { key: 'headline1', label: '見出し1', value: planResult.googlePlan.headline1, location: '広告 > レスポンシブ検索広告' },
                           { key: 'description', label: '説明文', value: planResult.googlePlan.description, location: '広告 > レスポンシブ検索広告 > 説明文' },
                         ].map(item => (
-                          <label key={item.key} className="flex items-start gap-3 cursor-pointer">
+                          <label key={item.key} className="flex items-start gap-3 cursor-pointer hover:bg-slate-50 rounded-lg p-3 transition-colors">
                             <input
                               type="checkbox"
                               checked={googleChecks[item.key] || false}
@@ -760,7 +760,7 @@ export default function MarketingAgentPage() {
                     </div>
                   )}
 
-                  <div className="bg-amber-50 rounded-xl p-5 mt-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mt-4">
                     <p className="font-medium text-slate-800">📊 このプランの期待値（目安）</p>
                     <div className="grid grid-cols-4 gap-4 mt-3">
                       {[
@@ -789,7 +789,7 @@ export default function MarketingAgentPage() {
                 <p className="text-sm text-amber-700">📈 稼働中の広告データを入力すると、AIが具体的な改善指示書を生成します。指示書をもとに広告管理画面で修正してください。</p>
               </div>
 
-              <div className="bg-white border rounded-xl p-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="font-semibold text-slate-900 mb-4">稼働中の広告データを入力</h3>
 
                 <Tabs value={improveAdPlatformTab} onValueChange={setImproveAdPlatformTab}>
@@ -809,7 +809,7 @@ export default function MarketingAgentPage() {
                     {improveMetaRows.map(row => {
                       const roas = row.purchases && row.spend ? (Number(row.purchases) * 5500 / Number(row.spend)).toFixed(2) : '—';
                       return (
-                        <div key={row.id} className="border rounded-lg p-4 mb-3 relative">
+                        <div key={row.id} className="border border-slate-200 rounded-xl p-4 mb-3 relative">
                           <button onClick={() => removeImproveRow(row.id, 'meta')} className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"><XIcon size={16} /></button>
                           <div className="grid grid-cols-5 gap-3 pr-6">
                             <div className="space-y-1"><label className="text-xs text-slate-500">キャンペーン名</label><Input value={row.name} onChange={e => updateImproveRow(row.id, 'name', e.target.value, 'meta')} placeholder="春の新商品キャンペーン" className="text-xs" /></div>
@@ -835,7 +835,7 @@ export default function MarketingAgentPage() {
                       <p className="text-sm text-slate-400 text-center py-4">「広告を追加する」ボタンでGoogle広告データを入力してください</p>
                     )}
                     {improveGoogleRows.map(row => (
-                      <div key={row.id} className="border rounded-lg p-4 mb-3 relative">
+                      <div key={row.id} className="border border-slate-200 rounded-xl p-4 mb-3 relative">
                         <button onClick={() => removeImproveRow(row.id, 'google')} className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"><XIcon size={16} /></button>
                         <div className="grid grid-cols-5 gap-3 pr-6">
                           <div className="space-y-1"><label className="text-xs text-slate-500">キャンペーン名</label><Input value={row.name} onChange={e => updateImproveRow(row.id, 'name', e.target.value, 'google')} className="text-xs" /></div>
@@ -869,7 +869,7 @@ export default function MarketingAgentPage() {
                 <button
                   onClick={handleImprovementAnalyze}
                   disabled={improvementLoading}
-                  className="mt-4 w-full bg-blue-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                  className="mt-4 w-full bg-blue-900 hover:bg-blue-950 text-white py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                 >
                   {improvementLoading ? (
                     <><span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />分析中...</>
@@ -900,7 +900,7 @@ export default function MarketingAgentPage() {
                             `Step 3: ステータスを「一時停止」に変更`,
                             `Step 4: 節約できた予算を改善中のキャンペーンに振り替える`,
                           ].map((step, j) => (
-                            <label key={j} className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+                            <label key={j} className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 hover:bg-white rounded-lg p-3 transition-colors">
                               <input type="checkbox" checked={improveChecks[`${checkPrefix}_stop_${j}`] || false} onChange={() => setImproveChecks(prev => ({ ...prev, [`${checkPrefix}_stop_${j}`]: !prev[`${checkPrefix}_stop_${j}`] }))} className="rounded" />
                               {step}
                             </label>
@@ -922,7 +922,7 @@ export default function MarketingAgentPage() {
                               { key: 'creative', label: 'クリエイティブの変更', detail: c.improvements.creative, location: '広告 > クリエイティブを編集' },
                               { key: 'keywords', label: 'キーワード最適化', detail: `追加: ${c.improvements.keywords.add.join(', ')} / 除外: ${c.improvements.keywords.remove.join(', ')}`, location: 'キーワード' },
                             ].map(item => (
-                              <label key={item.key} className="flex items-start gap-3 cursor-pointer">
+                              <label key={item.key} className="flex items-start gap-3 cursor-pointer hover:bg-white rounded-lg p-3 transition-colors">
                                 <input type="checkbox" checked={improveChecks[`${checkPrefix}_${item.key}`] || false} onChange={() => setImproveChecks(prev => ({ ...prev, [`${checkPrefix}_${item.key}`]: !prev[`${checkPrefix}_${item.key}`] }))} className="mt-0.5 rounded" />
                                 <div>
                                   <p className="text-sm font-medium text-slate-800">{item.label}</p>
@@ -1065,7 +1065,7 @@ export default function MarketingAgentPage() {
                     <select
                       value={t1Competitor}
                       onChange={(e) => setT1Competitor(e.target.value)}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 bg-white"
                     >
                       <option value="low">低い（自社が強い）</option>
                       <option value="normal">普通</option>
@@ -1079,7 +1079,7 @@ export default function MarketingAgentPage() {
               <button
                 onClick={handleBudgetJudge}
                 disabled={t1Loading}
-                className="mt-6 w-full bg-blue-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                className="mt-6 w-full bg-blue-900 hover:bg-blue-950 text-white py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 {t1Loading ? (
                   <>
@@ -1169,7 +1169,7 @@ export default function MarketingAgentPage() {
                       comment: t1Result.marginComment,
                     },
                   ].map((item) => (
-                    <div key={item.label} className="bg-white border rounded-lg p-4 text-center">
+                    <div key={item.label} className="bg-white border border-slate-200 rounded-xl p-4 text-center">
                       <p className="text-xs text-slate-500 font-medium mb-1">{item.label}</p>
                       <p className="text-lg font-bold text-slate-800">{item.value}</p>
                       <p className="text-xl mt-1">{judgmentIcon(item.judgment)}</p>
@@ -1189,7 +1189,7 @@ export default function MarketingAgentPage() {
                   </button>
                   <button
                     onClick={handleT1Delegate}
-                    className="bg-blue-900 text-white w-full py-3 rounded-lg text-sm font-medium hover:bg-blue-800 transition-colors"
+                    className="bg-blue-900 hover:bg-blue-950 text-white w-full py-3 rounded-lg font-medium transition-colors"
                   >
                     集客AIに予算変更を依頼する
                   </button>
@@ -1224,7 +1224,7 @@ export default function MarketingAgentPage() {
 
               <div className="space-y-3">
                 {adRows.map((row) => (
-                  <div key={row.id} className="border rounded-lg p-4 relative">
+                  <div key={row.id} className="border border-slate-200 rounded-xl p-4 relative">
                     <button
                       onClick={() => removeAdRow(row.id)}
                       className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors"
@@ -1289,7 +1289,7 @@ export default function MarketingAgentPage() {
               <button
                 onClick={handleAdStopJudge}
                 disabled={t2Loading || adRows.length === 0}
-                className="mt-4 w-full bg-blue-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                className="mt-4 w-full bg-blue-900 hover:bg-blue-950 text-white py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 {t2Loading ? (
                   <>

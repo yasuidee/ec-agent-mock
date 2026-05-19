@@ -83,11 +83,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       >
         {/* Logo */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shrink-0">
-              <span className="text-white text-xs font-bold">EC</span>
-            </div>
-            <span className="text-lg font-bold text-white tracking-tight">EC Agent</span>
+          <div className="flex items-center">
+            <img
+              src="/logo.png"
+              alt="raxel"
+              className="h-7 w-auto object-contain"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
           </div>
           <button
             className="md:hidden text-slate-400 hover:text-white transition-colors"

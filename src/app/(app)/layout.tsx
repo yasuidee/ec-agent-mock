@@ -87,7 +87,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <img
               src="/logo.png"
               alt="raxel"
-              className="h-10 w-auto object-contain"
+              className="h-12 w-auto object-contain"
             />
           </div>
           <button

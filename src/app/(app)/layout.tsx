@@ -88,7 +88,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               src="/logo.png"
               alt="raxel"
               className="h-7 w-auto object-contain"
-              style={{ filter: 'brightness(0) invert(1)' }}
             />
           </div>
           <button
